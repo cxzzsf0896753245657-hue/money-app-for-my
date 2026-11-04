@@ -1,0 +1,14 @@
+{
+  "name": "money-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "記帳本（網頁 App，用 Capacitor 打包成 Android APK）",
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.1.2"
+  }
+}

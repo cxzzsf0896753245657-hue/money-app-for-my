@@ -1,0 +1,8 @@
+{
+  "appId": "com.example.moneyapp",
+  "appName": "記帳本",
+  "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}
