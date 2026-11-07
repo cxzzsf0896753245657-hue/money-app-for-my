@@ -154,7 +154,12 @@ def main():
         if not line or line.startswith("#") or ":" not in line:
             continue
         mk, sym = line.split(":", 1)
-        wants.append((mk.strip().lower(), sym.strip().upper()))
+        mk, sym = mk.strip().lower(), sym.strip().upper()
+        if mk == "sg" and sym.endswith(".SI"):
+            sym = sym[:-3]
+        elif mk == "tw" and (sym.endswith(".TW") or sym.endswith(".TWO")):
+            sym = sym.rsplit(".", 1)[0]
+        wants.append((mk, sym))
     tw = tw_table() if any(m == "tw" for m, _ in wants) else {}
     tw_ex = twt48u() if any(m == "tw" for m, _ in wants) else {}
     got = 0

@@ -3,3 +3,4 @@
 tw:2330
 tw:0050
 us:AAPL
+sg:D05
