@@ -1,5 +1,5 @@
 // 簡單的離線快取：app 本體優先用快取，prices.json 優先連網。改版時把 VER 加一。
-const VER = "v1";
+const VER = "v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

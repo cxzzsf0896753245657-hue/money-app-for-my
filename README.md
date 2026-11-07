@@ -26,9 +26,10 @@
 
 ## 二、每日更新股價（可選）
 
-1. 編輯 `symbols.txt`，換成你的持股代號（App 裡「帳戶詳情 → 持股 → 代號清單」可以複製）。
-2. 到 Actions → **update-prices** → Run workflow 手動跑一次，之後平日台灣時間 16:30 會自動更新，結果存在 repo 根目錄的 `prices.json`。
-3. 在 App 的「帳戶詳情 → 持股 → 代號清單」最下面，貼上股價檔網址：
+1. 編輯 `symbols.txt`，換成你的持股代號，格式 `tw:2330`、`us:AAPL`、`sg:D05`（新加坡股，不用加 .SI）（App 裡「帳戶詳情 → 持股 → 代號清單」可以複製）。
+2. （自動）腳本也會抓每檔近 1／3／5 年年化報酬、近 12 個月配息、殖利率與除息日，顯示在持股明細；台股下次除息日取自證交所預告表，其他市場為依去年同期推算的預估。
+3. 到 Actions → **update-prices** → Run workflow 手動跑一次，之後平日台灣時間 16:30 會自動更新，結果存在 repo 根目錄的 `prices.json`。
+4. 在 App 的「帳戶詳情 → 持股 → 代號清單」最下面，貼上股價檔網址：
    `https://raw.githubusercontent.com/你的帳號/你的倉庫/main/prices.json`
    （Private repo 讀不到，需要改成 Public）。
 4. 基金、債券請在 App 裡手動輸入淨值。
