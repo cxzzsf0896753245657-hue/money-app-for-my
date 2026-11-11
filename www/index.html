@@ -10,9 +10,9 @@
 --bg:#f3f5fa;--card:#fff;--tx:#1c2333;--sub:#69728a;--line:#e5e8f1;--pri:#5f78b8;--hero:#2a3a8f;--inc:#3f9a7e;--exp:#cc6468;--soft:#eceffb;--sh:0 1px 2px rgba(28,35,51,.06),0 6px 18px rgba(28,35,51,.06)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141d;--card:#1a1f2d;--tx:#eceff7;--sub:#9aa2b8;--line:#2a3045;--pri:#8ba0ff;--hero:#27346f;--inc:#3ed3a0;--exp:#ff7a7f;--soft:#242b44;--sh:0 1px 2px rgba(0,0,0,.3)}}
 :root[data-theme="dark"]{--bg:#11141d;--card:#1a1f2d;--tx:#eceff7;--sub:#9aa2b8;--line:#2a3045;--pri:#8ba0ff;--hero:#27346f;--inc:#3ed3a0;--exp:#ff7a7f;--soft:#242b44;--sh:0 1px 2px rgba(0,0,0,.3)}
-html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg);overflow-x:clip}#main{overflow-x:clip}
 *{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--tx);font:16px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:96px;font-variant-numeric:tabular-nums}
+body{overflow-x:clip;background:var(--bg);color:var(--tx);font:16px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:96px;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
@@ -371,7 +371,7 @@ function vCht_(){
  const T=[["exp","支出"],["inc","收入"],["bud","預算"],["trd","收支趨勢"],["ast","資產趨勢"]];
  let h=`<header class="bar" style="padding-right:4px"><h1 style="font-size:20px;flex:none">圖表分析</h1><div style="flex:1"></div><div class="mn" style="margin:0;color:var(--tx);gap:0">${ib("chevron-left","crStep(-1)","上一期")}<button onclick="S.rt='cr';pgo('range')" style="display:flex;align-items:center;gap:2px;font-size:15px;font-weight:600;min-height:44px;white-space:nowrap">${crLabel()}${ic("chevron-down",16)}</button>${ib("chevron-right","crStep(1)","下一期")}</div>${ib("funnel","openFil()","篩選")}</header><div class="tabs">${T.map(([k,l])=>`<button class="${S.ct==k?"on":""}" onclick="S.fx='nu@b';S.ct='${k}';render()">${l}</button>`).join("")}</div>`;
  if(S.fl.acc||S.fl.mem)h+=`<div style="padding:0 16px 8px;color:var(--sub);font-size:13px">已套用篩選：${S.fl.acc?esc(accN(+S.fl.acc)):""} ${S.fl.mem?esc(S.fl.mem):""}</div>`;
- if(S.ct=="bud")return h+"<!--fx:b-->"+budCards(crRef())+`<div style="padding:0 16px 16px"><button class="btn" style="width:100%" onclick="pgo('budnew')">新增預算</button></div>`;
+ if(S.ct=="bud")return h+"<!--fx:b-->"+bpBody(0);
  if(S.ct=="trd"||S.ct=="ast")return h+"<!--fx:b-->"+trend();
  const L=cxf().filter(t=>t.type==S.ct),tot=L.reduce((s,t)=>s+val(t),0);
  h+=`<div class="sg">${[["cat","類別"],["acc","帳戶"],["mem","成員"]].map(([k,l])=>`<button class="${S.sub==k?"on":""}" onclick="S.fx='nu@b';S.sub='${k}';render()">${l}</button>`).join("")}</div><!--fx:b-->`;
@@ -764,15 +764,16 @@ function bpSec(k){const Y=S.bpv=="y",b=bpD(),L=b[k],[t,i,c,h]=BPK[k],tot=k=="ann
  return`<section class="card" style="padding:0 0 4px"><div style="padding:14px 16px 4px;display:flex;align-items:center;gap:10px">${tl(i,c,36)}<div style="flex:1"><b style="font-size:17px">${t}</b><div style="font-size:12px;color:var(--sub)">${h}</div></div><div style="text-align:right"><b style="font-variant-numeric:tabular-nums">${fmt(rnd100(Y?tot*12:tot))}</b><div style="font-size:12px;color:var(--sub)">${Y?"全年":"每月"}</div></div></div>`+
  (L.length?L.map(x=>bpRow(k,x)).join(""):`<div style="padding:10px 16px;color:var(--sub);font-size:13px">還沒有項目</div>`)+
  `<div class="f2" style="padding:6px 16px 8px;gap:8px"><button class="btn o" style="height:38px;font-size:14px;white-space:nowrap;display:block;padding:0 8px" onclick="bpEdit('${k}')">＋ 新增</button>${k!="annual"?`<button class="btn o" style="height:38px;font-size:14px;white-space:nowrap;display:block;padding:0 8px" onclick="bpImport('${k}')">${bpImp(k)}</button>`:""}</div></section>`}
-function pgBPlan(){const Y=S.bpv=="y",M=Y?12:1,b=bpD(),s=bpSum(),tot=Math.max(s.inc,s.f+s.d+s.a+s.i,1),ok=s.left>=0,inc=b.inc;
+function pgBPlan(){return pbar("預算規劃")+bpBody(1)}
+function bpBody(pg){const Y=S.bpv=="y",M=Y?12:1,b=bpD(),s=bpSum(),tot=Math.max(s.inc,s.f+s.d+s.a+s.i,1),ok=s.left>=0,inc=b.inc;
  const el=Math.round((new Date(today()+"T00:00")-new Date(today().slice(0,4)+"-01-01T00:00"))/864e5+1),ep=Math.min(100,Math.round(el/365*100));
- return pbar("預算規劃")+`<div class="sg">${[["m","每月"],["y","全年度"]].map(([k,l])=>`<button class="${(S.bpv||"m")==k?"on":""}" onclick="S.bpv='${k}';render();scrollTo(0,0)">${l}</button>`).join("")}</div><div style="padding:0 20px 8px;color:var(--sub);font-size:14px;line-height:1.6">${Y?"依每月規劃推算全年；不定期項目用全年金額。":"把每月收入分成四個桶，金額抓大概就好。"}</div>`+
+ return `<div class="sg">${[["m","每月"],["y","全年度"]].map(([k,l])=>`<button class="${(S.bpv||"m")==k?"on":""}" onclick="S.bpv='${k}';render();scrollTo(0,0)">${l}</button>`).join("")}</div><div style="padding:0 20px 8px;color:var(--sub);font-size:14px;line-height:1.6">${Y?"依每月規劃推算全年；不定期項目用全年金額。":"把每月收入分成四個桶，金額抓大概就好。"}</div>`+
  `<section class="card p"><div class="tr"><div><small class="s">${Y?"全年收入":"每月收入"}${inc.auto?"（近 3 個月平均）":"（手動）"}</small><button class="slv" style="display:block;font-size:26px;font-weight:700;margin-top:2px" onclick="bpIncEdit()">${fmt(s.inc*M)}</button>${Y?`<small class="s">每月 ${fmt(s.inc)} × 12，點數字可改每月收入</small>`:""}</div><button class="atg ${inc.auto?"on":""}" onclick="bpIncAuto()">${inc.auto?"自動":"手動"}</button></div>`+
  `<div class="sp" style="height:12px;display:flex;border-radius:6px;margin:14px 0 10px">${bpBar("固定",s.f,BPK.fixed[2],tot)}${bpBar("日常",s.d,BPK.daily[2],tot)}${bpBar("不定期",s.a,BPK.annual[2],tot)}${bpBar("投資",s.i,BPK.inv[2],tot)}</div>`+
  [["fixed","固定支出",s.f],["daily","日常變動",s.d],["annual","不定期（每月預留）",s.a],["inv","投資",s.i]].map(([k,l,v])=>`<div class="tr" style="min-height:28px;font-size:14px"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${BPK[k][2]};margin-right:8px"></i>${l}</span><span style="font-variant-numeric:tabular-nums">${fmt(rnd100(v*M))}</span></div>`).join("")+
  `<div class="tr" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--line)"><b>${Y?"全年可自由運用":"每月可自由運用"}</b><b class="${ok?"inc":"exp"}" style="font-size:20px;font-variant-numeric:tabular-nums">${fmt(rnd100(s.left*M))}</b></div>${ok?"":`<small class="s exp">規劃的支出已超過收入，需要調整。</small>`}${Y?`<div style="margin-top:12px;font-size:13px;color:var(--sub)">今年已過 ${ep}%（第 ${el} 天）・今年已支出約 ${fmt(rnd100(bpYearSpent()))}</div><div class="sp"><i style="width:${ep}%"></i></div>`:""}</section>`+
  ["fixed","daily","annual","inv"].map(bpSec).join("")+
- `<div style="padding:0 16px 24px"><button class="btn o" style="width:100%" onclick="S.bpf=1;pgo('buds')">進階：依類別精細預算</button></div>`}
+ `<div style="padding:0 16px 24px"><button class="btn o" style="width:100%" onclick="S.bpf=${pg?1:0};pgo('buds')">進階：依類別精細預算</button></div>`}
 function bpIncEdit(){const b=bpD();form("每月收入",`<input id="bpa" type="number" inputmode="decimal" placeholder="大概金額即可" value="${bpInc()||""}">`,()=>{const v=+$("bpa").value;if(!(v>=0))return false;b.inc={amt:v,auto:false}});setTimeout(()=>{const e=$("bpa");e&&e.focus()},350)}
 function bpIncAuto(){const b=bpD();b.inc.auto=!b.inc.auto;if(!b.inc.auto&&!b.inc.amt)b.inc.amt=bpAvgInc();save();render()}
 let _bpc="";
