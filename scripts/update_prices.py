@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """讀取 symbols.txt，抓最新股價，寫入 prices.json（只用 Python 標準函式庫）。
 prices.json 會另外存每檔近半年的每日收盤價（h），供 app 的定期定額依扣款日換算。
-symbols.txt 每行一檔：tw:2330（台股，含上櫃）、us:AAPL（美股）或 sg:D05（新加坡股，不用加 .SI），# 開頭是註解。
+symbols.txt 每行一檔：tw:2330（台股，含上櫃）、us:AAPL（美股）、sg:D05（新加坡股，不用加 .SI）或 fund:A36004（基金，鉅亨網代碼），# 開頭是註解。
 抓不到的代號會保留 prices.json 裡上一次的價格。"""
 import json, os, sys, urllib.request, datetime
 
@@ -102,6 +102,34 @@ def history(mk, sym, today):
     return None
 
 
+def fund_nav(code, pages=13):
+    """鉅亨網基金淨值（非官方公開介面，可能改版失效）。回傳 {p, pv, d, h}，抓不到回傳 None。
+    每頁 10 個交易日，預設抓 13 頁約半年，供定期定額換算。"""
+    rows = []
+    for pg in range(1, pages + 1):
+        try:
+            j = get(f"https://fund.api.cnyes.com/fund/api/v1/funds/{code}/nav?format=table&page={pg}")
+        except Exception as e:  # noqa: BLE001
+            if pg == 1:
+                raise
+            print(f"fund:{code} 第 {pg} 頁失敗：", e)
+            break
+        data = (j.get("items") or {}).get("data") or []
+        for x in data:
+            nav = num(x.get("nav"))
+            if nav:
+                d = datetime.datetime.fromtimestamp(int(x["tradeDate"]), TZ).date().isoformat()
+                rows.append((d, nav))
+        if len(data) < 10:
+            break
+    if not rows:
+        return None
+    rows.sort()
+    d, p = rows[-1]
+    pv = rows[-2][1] if len(rows) > 1 else None
+    return {"p": p, "pv": pv, "d": d, "h": {a: b for a, b in rows}}
+
+
 def roc_date(s):
     """民國日期 '1150120' 或 '115/01/20' → '2026-01-20'"""
     import re
@@ -172,16 +200,18 @@ def main():
                 q = us_quote(sym)
             elif mk == "sg":
                 q = us_quote(sym if "." in sym else sym + ".SI")
+            elif mk == "fund":
+                q = fund_nav(sym)
         except Exception as e:  # noqa: BLE001
             print(f"{mk}:{sym} 失敗：", e)
         if q and q.get("p"):
             old = prices.get(sym) or {}
             old_h = old.get("h") or {}
-            info = history(mk, sym, today) or {}
+            info = (history(mk, sym, today) if mk != "fund" else {"h": q.pop("h", None)}) or {}
             old_h.update(info.get("h") or {})
             old_h[q.get("d") or today] = q["p"]
             keep = sorted(old_h)[-260:]
-            prices[sym] = {k: v for k, v in {**q, "d": today}.items() if v is not None}
+            prices[sym] = {k: v for k, v in {**q, "d": q.get("d") or today}.items() if v is not None}
             prices[sym]["h"] = {d: old_h[d] for d in keep}
             perf = info.get("perf") or old.get("perf")
             dv = info.get("div") or old.get("div")
