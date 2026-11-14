@@ -274,7 +274,8 @@ function grpAccs(list){const ts=[...AT,...new Set(list.map(a=>a.t).filter(t=>!AT
 const ACOL={"現金":"#4a9f85","金融卡":"#6b8fd6","信用卡":"#cc6468","電子支付":"#9a86d6","股票":"#df8a72","基金":"#c9a04a","債券":"#4fb3a5","定存":"#d97a9c"};
 const $=id=>document.getElementById(id);
 const r3=n=>Math.round(Math.abs(n)*1000)/1000,f3=n=>r3(n).toLocaleString("en-US",{maximumFractionDigits:3}),sn=n=>n<0&&r3(n)>0?"-":"";
-const fmt=n=>sn(n)+"NT$"+f3(n);
+const i0=n=>Math.round(Math.abs(n)).toLocaleString("en-US"),si=n=>n<0&&Math.round(Math.abs(n))>0?"-":"";
+const fmt=n=>si(n)+"NT$"+i0(n);
 const SYM={TWD:"NT$",JPY:"¥",USD:"US$",EUR:"€",CNY:"CN¥",GBP:"£",KRW:"₩",HKD:"HK$",AUD:"A$",SGD:"S$",THB:"฿"};
 const fmtC=(n,c)=>c&&c!="TWD"?sn(n)+(SYM[c]||c+" ")+f3(n):fmt(n);
 const rate=c=>!c||c=="TWD"?1:(D&&D.rates&&D.rates[c])||1;
@@ -493,21 +494,23 @@ function openGoal(){pane("存錢目標",(D.goals.length?D.goals.map(g=>{const p=
 function addG(){form("新增目標",`<input id="v1" placeholder="目標名稱"><input id="v2" type="number" inputmode="decimal" placeholder="目標金額">`,()=>{if(!gv("v1")||!+gv("v2"))return false;D.goals.push({id:rid(),n:gv("v1"),target:+gv("v2"),saved:0})},openGoal)}
 function depG(id){form("存入金額",`<input id="v1" type="number" inputmode="decimal" placeholder="金額（負數代表取出）">`,()=>{if(!+gv("v1"))return false;D.goals.find(g=>g.id==id).saved+=+gv("v1")},openGoal)}
 
-const FL={day:"每天",week:"每週",biweek:"每兩週",month:"每月",year:"每年"};
+const FL={day:"每天",week:"每週",biweek:"每兩週",month:"每月",year:"每年",nday:"自訂天數"};
+const flT=r=>r.f=="nday"?`每 ${r.nd||1} 天`:FL[r.f],fqM=r=>r.f=="nday"?365/12/(r.nd||1):({day:365/12,week:52/12,biweek:26/12,month:1,year:1/12}[r.f]||1);
+const ndRow=f=>`<div id="ndr" style="${f.f=="nday"?"":"display:none"}"><label class="row" style="padding:8px 16px">${tl("calendar","#c9a04a",40)}<div class="m"><div>間隔天數</div><small>每隔幾天記一次</small></div><input id="r10" type="number" inputmode="numeric" min="1" placeholder="例如 10" value="${f.nd||""}" style="width:50%;text-align:right;border:0;background:transparent;margin:0;padding:0"></label></div>`;
 const CN={TWD:"新台幣",JPY:"日圓",USD:"美元",EUR:"歐元",CNY:"人民幣",GBP:"英鎊",KRW:"韓元",HKD:"港幣",AUD:"澳幣",SGD:"新加坡幣",THB:"泰銖"};
-function adv(d,f,day){const x=new Date(d+"T00:00");
- if(f=="day")x.setDate(x.getDate()+1);else if(f=="week")x.setDate(x.getDate()+7);else if(f=="biweek")x.setDate(x.getDate()+14);
+function adv(d,f,day,nd){const x=new Date(d+"T00:00");
+ if(f=="nday")x.setDate(x.getDate()+Math.max(1,nd|0||1));else if(f=="day")x.setDate(x.getDate()+1);else if(f=="week")x.setDate(x.getDate()+7);else if(f=="biweek")x.setDate(x.getDate()+14);
  else{const m=x.getMonth()+(f=="year"?12:1),y=x.getFullYear(),dim=new Date(y,m+1,0).getDate();x.setTime(new Date(y,m,Math.min(day||new Date(d+"T00:00").getDate(),dim)).getTime())}
  return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
 function runRec(){const t=today();D.rec.forEach(r=>{let n=0;const ac=D.accs.find(a=>a.id==r.acc)||{},tr=r.type=="trf";
- while(r.next<=t&&n++<120){const x={id:rid(),date:r.next,time:"00:00:00",type:r.type,cat:tr?"":r.cat,amt:r.amt,acc:r.acc,mem:r.mem,led:r.led,note:r.note!=null?r.note:(r.n||""),cur:(r.dca&&!r.acc?(D.accs.find(a=>a.id==r.to)||{}).cur:ac.cur)||"TWD"};if(tr)x.to=r.to;if(r.dca)dcaBuy(r,x);if(!(r.dca&&!r.acc))D.tx.push(x);r.next=adv(r.next,r.f,r.day)}})}
+ while(r.next<=t&&n++<120){const x={id:rid(),date:r.next,time:"00:00:00",type:r.type,cat:tr?"":r.cat,amt:r.amt,acc:r.acc,mem:r.mem,led:r.led,note:r.note!=null?r.note:(r.n||""),cur:(r.dca&&!r.acc?(D.accs.find(a=>a.id==r.to)||{}).cur:ac.cur)||"TWD"};if(tr)x.to=r.to;if(r.dca)dcaBuy(r,x);if(!(r.dca&&!r.acc))D.tx.push(x);r.next=adv(r.next,r.f,r.day,r.nd)}})}
 const recName=r=>r.dca?"定期定額・"+holdName(r):r.note||(r.type=="trf"?"轉帳":fnd(r.type,r.cat).n);
 function pgRecs(){
  const add=`<button class="fadd" onclick="pgo('recnew')">${ic("plus",20)}新增</button>`;
  const h=pbar("週期記帳","chevron-left",ib("plus","pgo('recnew')","新增"));
  if(!D.rec.length)return h+empty("repeat","還沒有週期記帳<br>例如每月房租、訂閱費、定期轉帳")+add;
  return h+`<section class="card" style="padding:0 16px">`+D.rec.map(r=>{const tr=r.type=="trf",c=r.dca?{i:"trending-up",c:"#df8a72"}:tr?{i:"arrow-left-right",c:"#6f7a93"}:fnd(r.type,r.cat),cu=(D.accs.find(x=>x.id==(r.acc||r.to))||{}).cur;
-  return`<button class="row" onclick="editRec(${r.id})">${tl(c.i,c.c)}<div class="m"><div>${esc(recName(r))}</div><small>${FL[r.f]}・下次 ${r.next}・${r.acc?esc(accN(r.acc)):"不扣款"}${tr?" → "+esc(accN(r.to)):""}</small></div><b class="${tr?"":r.type}">${fmtC(r.amt,cu)}</b></button>`}).join("")+`</section><small class="s" style="margin:0 16px 12px">開啟 app 時，到期的項目會自動入帳。</small>`+add}
+  return`<button class="row" onclick="editRec(${r.id})">${tl(c.i,c.c)}<div class="m"><div>${esc(recName(r))}</div><small>${flT(r)}・下次 ${r.next}・${r.acc?esc(accN(r.acc)):"不扣款"}${tr?" → "+esc(accN(r.to)):""}</small></div><b class="${tr?"":r.type}">${fmtC(r.amt,cu)}</b></button>`}).join("")+`</section><small class="s" style="margin:0 16px 12px">開啟 app 時，到期的項目會自動入帳。</small>`+add}
 function pgRecNew(){const it=(i,c,t,sb,k)=>`<button class="row" style="padding:8px 16px" onclick="newRec('${k}')">${tl(i,c,48)}<div class="m"><div style="font-size:17px">${t}</div><small>${sb}</small></div>${ic("chevron-right",20)}</button>`;
  return pbar("新增週期記帳類型","chevron-left","","pgo('recs')")+`<section class="card" style="padding:0">`+it("circle-dollar-sign","#c9a04a","固定收支","固定或週期性收支項目","ie")+it("arrow-left-right","#6b8fd6","固定轉帳","固定或週期性轉帳項目","trf")+it("trending-up","#df8a72","定期定額","固定金額定期買進股票、基金或債券","dca")+`</section>`}
 function newRec(kind,accId){const A=D.accs.filter(a=>a.st!="off"),cash=A.filter(a=>!["股票","基金","債券"].includes(a.t));
@@ -530,14 +533,15 @@ function pgRecF(){
  frow("credit-card","#6b8fd6","從帳戶","",`<select id="r4" onchange="rfCur()" ${cs}>${ao(f.acc)}</select>`)+
  (tr?frow("landmark","#4a9f85","到帳戶","",`<select id="r5" ${cs}>${ao(f.to)}</select>`):"")+
  `</section><div style="padding:12px 16px 0;color:var(--sub);font-size:13px">週期</div><section class="card" style="padding:0;margin-top:4px">`+
- frow("repeat","#4fb3a5","週期","",`<select id="r6" ${cs}>${opt(Object.entries(FL),f.f)}</select>`)+
+ frow("repeat","#4fb3a5","週期","",`<select id="r6" onchange="$('ndr').style.display=this.value=='nday'?'':'none'" ${cs}>${opt(Object.entries(FL),f.f)}</select>`)+ndRow(f)+
  frow("calendar","#6b8fd6","開始日期","",`<input id="r7" type="date" value="${f.next}" ${cs}>`)+
  `</section><div style="padding:12px 16px 0;font-weight:700;font-size:18px">備註</div><section class="card p" style="margin-top:8px"><textarea id="r8" maxlength="30" style="height:96px;font-size:16px" placeholder="填寫備註" oninput="$('rn').textContent=this.value.length+'/30'">${esc(f.note||"")}</textarea><div style="text-align:right;color:var(--sub)" id="rn">${(f.note||"").length}/30</div></section>`+
  (f.id?`<div style="padding:0 16px 16px"><button class="btn o exp" style="width:100%" onclick="delRec(${f.id})">刪除此週期記帳</button></div>`:"")}
-function saveRec(){if(S.rf.kind=="dca")return saveDca();const f=S.rf,tr=f.kind=="trf",amt=+$("r1").value;
+function ndBad(){return $("r6").value=="nday"&&!(parseInt($("r10").value)>=1)}
+function saveRec(){if(S.rf.kind=="dca")return saveDca();if(ndBad())return toast("請輸入間隔天數");const f=S.rf,tr=f.kind=="trf",amt=+$("r1").value;
  if(!(amt>0))return toast("請輸入金額");
  const acc=+$("r4").value,to=tr?+$("r5").value:null;if(tr&&to==acc)return toast("轉出與轉入帳戶要不同");
- const st=$("r7").value||today(),o={amt,acc,f:$("r6").value,next:st,day:+st.slice(8),note:$("r8").value.trim(),led:f.led,mem:tr?D.mems[0]:$("r3").value};
+ const st=$("r7").value||today(),o={amt,acc,f:$("r6").value,nd:$("r6").value=="nday"?Math.max(1,parseInt($("r10").value)||0):undefined,next:st,day:+st.slice(8),note:$("r8").value.trim(),led:f.led,mem:tr?D.mems[0]:$("r3").value};
  if(tr){o.type="trf";o.to=to;o.cat=""}else{const[ty,ca]=$("r2").value.split("|");o.type=ty;o.cat=ca}
  if(f.id)Object.assign(D.rec.find(x=>x.id==f.id),o);else D.rec.push({id:rid(),...o});
  runRec();save();pgo("recs")}
@@ -817,7 +821,7 @@ function bpImport(k){const b=bpD();let add=[];
  if(k=="daily"){const t=today(),a=addD(t,-89),g={};D.tx.filter(x=>x.type=="exp"&&!x.adj&&x.date>=a&&x.date<=t).forEach(x=>{const p=fnd("exp",x.cat).p;g[p]=(g[p]||0)+val(x)});
   add=Object.entries(g).sort((x,y)=>y[1]-x[1]).slice(0,8).map(([c,v])=>({cat:c,amt:Math.max(100,rnd100(v/3))})).filter(x=>!b.daily.some(y=>y.cat==x.cat))}
  else{const L=D.rec.filter(r=>k=="inv"?r.dca:(!r.dca&&r.type=="exp"));
-  add=L.map(r=>{const c=(D.accs.find(a=>a.id==(r.acc||r.to))||{}).cur,n=r.dca?"定期定額・"+holdName(r):recName(r);return{n,amt:Math.max(100,rnd100(r.amt*rate(c)*(FQ[r.f]||1)))}}).filter(x=>!b[k].some(y=>y.n==x.n))}
+  add=L.map(r=>{const c=(D.accs.find(a=>a.id==(r.acc||r.to))||{}).cur,n=r.dca?"定期定額・"+holdName(r):recName(r);return{n,amt:Math.max(100,rnd100(r.amt*rate(c)*fqM(r)))}}).filter(x=>!b[k].some(y=>y.n==x.n))}
  if(!add.length){toast(k=="daily"?"沒有可帶入的近期支出":"沒有可帶入的項目（或已帶入過）");return}
  add.forEach(x=>b[k].push({id:rid(),...x}));save();render();toast("已帶入 "+add.length+" 項，可點項目微調")}
 function pgBuds(){return pbar("預算管理")+`<div style="display:flex;justify-content:center;padding-bottom:8px">${mnav().replace('class="mn"','class="mn" style="width:100%;max-width:300px"')}</div>`+budCards()+`<button class="fadd" onclick="pgo('budnew')">${ic("plus",20)}新增</button>`}
@@ -889,7 +893,7 @@ function trend(){
  const B0=buckets(S.cr.a,S.cr.z);if(!B0.list.length)return empty("chart-line","這個期間還沒有資料");
  return S.ct=="ast"?trendAst(B0):trendFlow()}
 
-const n0=v=>sn(v)+f3(v),sg=v=>(v>0.0004?"+":v<-0.0004?"-":"")+n0(Math.abs(v)),pc=(a,b)=>b?(a-b)/Math.abs(b)*100:null;
+const n0=v=>si(v)+i0(v),sg=v=>(v>=0.5?"+":v<=-0.5?"-":"")+n0(Math.abs(v)),pc=(a,b)=>b?(a-b)/Math.abs(b)*100:null;
 const bdg=(p,goodUp)=>{if(p==null||!isFinite(p))return`<span class="bdg nu">—</span>`;const up=p>=0,good=goodUp?up:!up;return`<span class="bdg ${Math.abs(p)<.05?"nu":good?"up":"dn"}">${up?"▲":"▼"}${Math.abs(p).toFixed(1)}%</span>`};
 function spark(a,c){if(a.length<2)return"";const mx=Math.max(...a),mn=Math.min(...a),w=60,h=20;return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="${a.map((v,i)=>(1+i*(w-2)/(a.length-1)).toFixed(1)+","+(h-2-(v-mn)/((mx-mn)||1)*(h-4)).toFixed(1)).join(" ")}"/></svg>`}
 function tgl(tr){const d=tr.nextElementSibling;d.hidden=!d.hidden;tr.classList.toggle("op")}
@@ -1108,11 +1112,11 @@ function pgRecDca(){const f=S.rf,hs=allHolds(),A=D.accs.filter(a=>a.st!="off"&&!
  frow("circle-dollar-sign","#c9a04a","每期投入金額",(CN[cu]||cu)+"("+cu+")",`<input id="r1" type="number" inputmode="decimal" placeholder="請輸入金額" value="${f.amt||""}" ${cs}>`,"rcur")+
  frow("trending-up","#df8a72","投資標的","",`<select id="r9" onchange="rfCur()" ${cs}>${opt(hs.map(x=>[x.a.id+"|"+x.h.id,(x.h.n||x.h.sym)+"（"+x.a.n+"）"]),f.hid)}</select>`)+
  frow("credit-card","#6b8fd6","扣款帳戶","",`<select id="r4" onchange="rfCur()" ${cs}><option value="0" ${f.acc?"":"selected"} data-sub="只增加持股，不影響任何帳戶餘額">不從任何帳戶扣款</option>${accOpt(A,f.acc)}</select>`)+
- `</section><div style="padding:12px 16px 0;color:var(--sub);font-size:13px">週期</div><section class="card" style="padding:0;margin-top:4px">`+frow("repeat","#4fb3a5","週期","",`<select id="r6" ${cs}>${opt(Object.entries(FL),f.f)}</select>`)+frow("calendar","#6b8fd6","開始日期","",`<input id="r7" type="date" value="${f.next}" ${cs}>`)+
+ `</section><div style="padding:12px 16px 0;color:var(--sub);font-size:13px">週期</div><section class="card" style="padding:0;margin-top:4px">`+frow("repeat","#4fb3a5","週期","",`<select id="r6" onchange="$('ndr').style.display=this.value=='nday'?'':'none'" ${cs}>${opt(Object.entries(FL),f.f)}</select>`)+ndRow(f)+frow("calendar","#6b8fd6","開始日期","",`<input id="r7" type="date" value="${f.next}" ${cs}>`)+
  `</section><div style="padding:12px 16px 0;font-weight:700;font-size:18px">備註</div><section class="card p" style="margin-top:8px"><textarea id="r8" maxlength="30" style="height:80px;font-size:16px" placeholder="填寫備註" oninput="$('rn').textContent=this.value.length+'/30'">${esc(f.note||"")}</textarea><div style="text-align:right;color:var(--sub)" id="rn">${(f.note||"").length}/30</div></section><small class="s" style="margin:0 16px 12px">每期會依當時已知的股價增加持有股數與成本；有選扣款帳戶時，會同時從該帳戶轉入投資帳戶，選「不從任何帳戶扣款」則只增加持股，不影響任何帳戶餘額。</small>`+(f.id?`<div style="padding:0 16px 16px"><button class="btn o exp" style="width:100%" onclick="delRec(${f.id})">刪除此定期定額</button></div>`:"")}
-function saveDca(){const f=S.rf,amt=+$("r1").value;if(!(amt>0))return toast("請輸入金額");const[to,hid]=$("r9").value.split("|").map(Number);if(!to)return toast("請選擇投資標的");
+function saveDca(){if(ndBad())return toast("請輸入間隔天數");const f=S.rf,amt=+$("r1").value;if(!(amt>0))return toast("請輸入金額");const[to,hid]=$("r9").value.split("|").map(Number);if(!to)return toast("請選擇投資標的");
  const acc=+$("r4").value;if(acc==to)return toast("扣款帳戶與投資帳戶要不同");const st=$("r7").value||today();
- const o={dca:true,type:"trf",cat:"",amt,acc,to,hid,f:$("r6").value,next:st,day:+st.slice(8),note:$("r8").value.trim(),led:f.led,mem:f.mem};
+ const o={dca:true,type:"trf",cat:"",amt,acc,to,hid,f:$("r6").value,nd:$("r6").value=="nday"?Math.max(1,parseInt($("r10").value)||0):undefined,next:st,day:+st.slice(8),note:$("r8").value.trim(),led:f.led,mem:f.mem};
  if(f.id)Object.assign(D.rec.find(x=>x.id==f.id),o);else D.rec.push({id:rid(),...o});runRec();save();pgo("recs")}
 const PDEF={age:30,ret:65,sal:50000,svc:5,self:0,sg:2,lr:3,lb:0,exp:60,wr:4,inf:2,pen:30000,asset:100,mon:2,rr:5,mcStart:1500,mcWd:60,mcYears:30,mcRet:5,mcSd:12,mcInf:2};
 const wan=v=>(Math.round(v*10)/10).toLocaleString("en-US",{maximumFractionDigits:1})+" 萬";
@@ -1142,7 +1146,7 @@ function calcMc(p,sims){sims=sims||1000;MCS=MCB;const Y=Math.max(1,Math.round(p.
  return{Y,sims,ok,rate:ok/sims*100,p10,med,p90}}
 function myAssets(){return Math.round(D.accs.filter(a=>a.st=="on"&&["儲蓄","投資"].includes(accG(a))).reduce((s,a)=>s+balV(a)*rate(a.cur),0)/1000)/10}
 function myAnnualExp(){const t=today(),a=addD(t,-364),L=D.tx.filter(x=>x.type=="exp"&&!x.adj&&x.date>=a&&x.date<=t);if(!L.length)return 0;const first=L.reduce((m,x)=>x.date<m?x.date:m,t),days=Math.min(365,Math.max(30,daysBetween(first,t)));return Math.round(L.reduce((s,x)=>s+val(x),0)/days*365/1000)/10}
-function myDca(){const f={day:365/12,week:52/12,biweek:26/12,month:1,year:1/12};return Math.round(D.rec.filter(r=>r.dca).reduce((s,r)=>s+r.amt*rate((D.accs.find(a=>a.id==r.acc)||{}).cur)*(f[r.f]||1),0)/100)/100}
+function myDca(){const f={day:365/12,week:52/12,biweek:26/12,month:1,year:1/12};return Math.round(D.rec.filter(r=>r.dca).reduce((s,r)=>s+r.amt*rate((D.accs.find(a=>a.id==r.acc)||{}).cur)*(fqM(r)||1),0)/100)/100}
 const PF={
  lao:[{k:"age",l:"目前年齡",half:1},{k:"ret",l:"預計退休年齡",half:1},{k:"sal",l:"目前月薪（NTD）",h:"高於勞保投保薪資上限 45,800 的部分，勞保試算以上限為準。"},{k:"svcY",l:"已累積勞保年資（年）",half:1},{k:"svcM",l:"加上（月，0–11）",half:1,h:"可到勞保局 e-Service 查詢實際年資，例如 5 年 8 個月。"},{k:"self",l:"勞退自提比例（%，0–6）",h:"自提部分可從當年度薪資所得中扣除（免稅優惠）。"},{k:"lb",l:"目前勞退個人專戶餘額（NTD，選填）",h:"可到勞保局 e-Service 查詢；不知道就留 0。"},{k:"sg",l:"薪資年成長（%）",half:1},{k:"lr",l:"勞退帳戶年化報酬（%）",half:1}],
  goal:[{k:"age",l:"目前年齡",half:1},{k:"ret",l:"預計退休年齡",half:1},{k:"exp",l:"退休後年支出（萬，今日幣值）",link:"exp",lt:"近一年支出"},{k:"wr",l:"提領率（%）",half:1},{k:"inf",l:"通膨率（%）",half:1,link:"inf",lt:"近一年平均通膨"},{k:"pen",l:"預期勞保＋勞退月領（NTD）",link:"pen",lt:"勞保勞退試算"},{k:"asset",l:"目前累積資產（萬）",link:"asset",lt:"儲蓄與投資帳戶"},{k:"mon",l:"每月投入（萬）",link:"mon",lt:"定期定額合計",half:1},{k:"rr",l:"假設年化報酬（%）",half:1,link:"rr",lt:"你的投資實際年化（資金加權，限 0–12%）"}],
