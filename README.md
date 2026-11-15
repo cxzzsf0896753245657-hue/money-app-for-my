@@ -13,16 +13,15 @@
 | `.github/workflows/build-apk.yml` | 打包 APK 的自動流程 |
 | `.github/workflows/update-prices.yml`、`scripts/update_prices.py`、`symbols.txt` | 每天自動抓股價（可選） |
 
-## 一、打包 APK
+## 一、打包 APK（全自動）
 
-1. 在 GitHub 建一個新的 repo（Private 或 Public 都可以）。
-2. 把這個資料夾裡的**所有檔案與資料夾**上傳（包含開頭是點的 `.github`、`.gitignore`）。用網頁上傳時，請把整個資料夾拖進去；`.github` 若沒有一起上傳，Actions 不會出現。
-3. 到 repo 的 **Settings → Actions → General → Workflow permissions**，選 **Read and write permissions**，按 Save。
-4. 到 **Actions** 頁面 → 左邊選 **build-apk** → 右邊 **Run workflow**。
-5. 約 5～10 分鐘後完成。點進那次執行，最下面 **Artifacts** 有 `money-app-apk`，下載解壓縮就是 `app-debug.apk`。
-6. 把 APK 傳到手機安裝（手機要允許「安裝未知來源的應用程式」）。
-
-之後想發佈固定版本：推送標籤（例如 `v1.0.0`），APK 會自動附在 Releases 頁面。
+- `www/`、`assets/`、`package.json`、`capacitor.config.json` 有更新並推送到 `main`，GitHub Actions 就會自動打包（約 5～10 分鐘）。
+- 打包完成會自動發布到 **Releases**，版本號是 `v1.0.執行次數`。
+- **最新版固定下載連結**（存成手機書籤，點了就下載最新 APK）：
+  `https://github.com/cxzzsf0896753245657-hue/money-app-for-my/releases/latest/download/money-app.apk`
+- 想手動重打包：到 **Actions** → **build-apk** → **Run workflow**。
+- 只有 `prices.json` 變動（每天抓股價）不會觸發打包。
+- 手機要允許「安裝未知來源的應用程式」。新版直接安裝即可覆蓋，資料會保留。
 
 ## 二、每日更新股價（可選）
 
@@ -61,7 +60,7 @@ Android 用三樣東西判斷「這是不是同一個 App、能不能直接更�
 
 仍然會讓資料消失的情況：解除安裝、在系統設定按「清除資料」、換了 appId 或簽章金鑰。重要資料請定期用「備份與還原」另外存一份。
 
-**發新版時**：把新的 `index.html` 放進 `www/`，並把檔案裡的 `APP_VER`（搜尋 `const APP_VER`）改成新的日期，這樣更新前的自動備份才會觸發；再跑 build-apk，安裝新的 APK 即可覆蓋。
+**發新版時**：把新的 `index.html` 放進 `www/`，並把檔案裡的 `APP_VER`（搜尋 `const APP_VER`）改成新的日期，這樣更新前的自動備份才會觸發；推送後會自動打包，安裝新的 APK 即可覆蓋。
 
 ## 五、手機返回鍵
 
@@ -71,5 +70,5 @@ APK 版的返回鍵會一層一層退回：關閉選單、關閉編輯畫面、�
 
 - **資料只存在手機裡**。APK 版和瀏覽器版的資料是分開的：從網頁版搬過去，請先在網頁版「更多 → 備份與還原」複製備份，再到 APK 裡貼上還原。換手機、解除安裝前也請先備份。
 - 這個 APK 可以自己安裝使用，但不能上架 Google Play。要上架需要另外建立私有的簽章金鑰（不要放進 repo）並改用 release 打包。
-- 更新 App 內容：把新的 `index.html` 覆蓋到 `www/index.html`，再執行一次 build-apk。
+- 更新 App 內容：把新的 `index.html` 覆蓋到 `www/index.html` 並推送到 `main`，會自動打包。
 - 如果 build-apk 失敗，點進失敗的步驟看紅字訊息，把訊息貼給我即可。

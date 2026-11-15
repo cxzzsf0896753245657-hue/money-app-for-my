@@ -3,10 +3,20 @@ name: build-apk
 on:
   workflow_dispatch:        # 到 Actions 頁面按 Run workflow 就會打包
   push:
-    tags: ["v*"]            # 推送 v1.0.0 這類標籤時，也會建立 Release 並附上 APK
+    branches: [main]        # App 內容有更新就自動打包並發布
+    paths:
+      - "www/**"
+      - "assets/**"
+      - "package.json"
+      - "capacitor.config.json"
+      - ".github/workflows/build-apk.yml"
 
 permissions:
   contents: write
+
+concurrency:                # 連續推送時，只保留最新那次打包
+  group: build-apk
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -64,14 +74,22 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: 上傳 APK
+      - name: 整理檔名
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk money-app.apk
+
+      - name: 上傳 APK（Actions 頁面也能下載）
         uses: actions/upload-artifact@v4
         with:
           name: money-app-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: money-app.apk
 
-      - name: 建立 Release（只在推送標籤時）
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: 發布到 Releases（固定下載連結永遠指向最新版）
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v1.0.${{ github.run_number }}
+          name: 記帳本 1.0.${{ github.run_number }}
+          body: |
+            自動打包：${{ github.event.head_commit.message || '手動執行' }}
+            下載最新版固定連結：https://github.com/${{ github.repository }}/releases/latest/download/money-app.apk
+          files: money-app.apk
+          make_latest: true

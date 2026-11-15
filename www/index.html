@@ -284,7 +284,7 @@ const rid=()=>Date.now()+Math.floor(Math.random()*1e6);
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 let D=null,S={tab:"book",led:"總資產",ym:today().slice(0,7),ct:"exp",sub:"cat",edit:null,f:{},fl:{},rot:0};
 try{D=JSON.parse(localStorage.getItem("mp2"))}catch(e){}
-const APP_VER="2026.11.06";
+const APP_VER="2026.11.15";
 try{const ov=localStorage.getItem("mp_ver");if(ov!==APP_VER){const raw=localStorage.getItem("mp2");if(raw){localStorage.setItem("mp2_bak",raw);localStorage.setItem("mp2_bak_ver",ov||"舊版")}localStorage.setItem("mp_ver",APP_VER)}}catch(e){}
 if(!D)seed();else fix();
 updFx();updPrices();updCpi();
