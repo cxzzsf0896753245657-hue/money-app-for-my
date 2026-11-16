@@ -9,7 +9,7 @@
 | `www/index.html` | App 本體（單一檔案，所有功能都在裡面） |
 | `www/manifest.webmanifest`、`www/sw.js`、`www/icon-*.png` | 網頁版「加到主畫面」與離線快取用 |
 | `assets/` | APK 的 App 圖示來源（1024 像素） |
-| `capacitor.config.json`、`package.json` | 打包設定（App 名稱、套件版本） |
+| `capacitor.config.json`、`package.json`、`package-lock.json` | 打包設定（App 名稱、套件版本；lock 檔固定實際版本，打包更穩定） |
 | `.github/workflows/build-apk.yml` | 打包 APK 的自動流程 |
 | `.github/workflows/update-prices.yml`、`scripts/update_prices.py`、`symbols.txt` | 每天自動抓股價（可選） |
 
@@ -21,11 +21,12 @@
   `https://github.com/cxzzsf0896753245657-hue/money-app-for-my/releases/latest/download/money-app.apk`
 - 想手動重打包：到 **Actions** → **build-apk** → **Run workflow**。
 - 只有 `prices.json` 變動（每天抓股價）不會觸發打包。
+- 手機 App 全新安裝時是空白的（只有一個「現金」帳戶），請到「更多 → 備份與還原」還原備份；網頁版第一次開啟則會載入範例資料。
 - 手機要允許「安裝未知來源的應用程式」。新版直接安裝即可覆蓋，資料會保留。
 
 ## 二、每日更新股價（可選）
 
-1. 編輯 `symbols.txt`，換成你的持股代號，格式 `tw:2330`、`us:AAPL`、`sg:D05`（新加坡股，不用加 .SI）、`fund:A36004`（基金，填鉅亨網代碼：在鉅亨網打開該基金頁面，網址裡 A 開頭的那段就是）（App 裡「帳戶詳情 → 持股 → 代號清單」可以複製）。
+1. 編輯 `symbols.txt`，換成你的持股代號（刪掉的代號，下次更新時也會從 `prices.json` 移除），格式 `tw:2330`、`us:AAPL`、`sg:D05`（新加坡股，不用加 .SI）、`fund:A36004`（基金，填鉅亨網代碼：在鉅亨網打開該基金頁面，網址裡 A 開頭的那段就是）（App 裡「帳戶詳情 → 持股 → 代號清單」可以複製）。
 2. （自動）股票另外會抓近 1／3／5 年年化報酬、近 12 個月配息、殖利率與除息日，顯示在持股明細；台股下次除息日取自證交所預告表，其他市場為依去年同期推算的預估。基金只有每日淨值（鉅亨網非官方介面，改版可能失效）。
 3. 到 Actions → **update-prices** → Run workflow 手動跑一次，之後平日台灣時間 16:30 會自動更新，結果存在 repo 根目錄的 `prices.json`。
 4. 在 App 的「帳戶詳情 → 持股 → 代號清單」最下面，貼上股價檔網址：

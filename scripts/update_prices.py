@@ -2,7 +2,7 @@
 """讀取 symbols.txt，抓最新股價，寫入 prices.json（只用 Python 標準函式庫）。
 prices.json 會另外存每檔近半年的每日收盤價（h），供 app 的定期定額依扣款日換算。
 symbols.txt 每行一檔：tw:2330（台股，含上櫃）、us:AAPL（美股）、sg:D05（新加坡股，不用加 .SI）或 fund:A36004（基金，鉅亨網代碼），# 開頭是註解。
-抓不到的代號會保留 prices.json 裡上一次的價格。"""
+抓不到的代號會保留 prices.json 裡上一次的價格；已從 symbols.txt 移除的代號會一併刪掉。"""
 import json, os, sys, urllib.request, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -226,6 +226,12 @@ def main():
             got += 1
         else:
             print(f"{mk}:{sym} 沒有抓到，保留舊價格")
+    # 只保留 symbols.txt 目前有的代號，移除的代號不再留在 prices.json
+    keep_syms = {sym for _, sym in wants}
+    gone = sorted(k for k in prices if k not in keep_syms)
+    if gone:
+        print("移除已不在 symbols.txt 的代號：", ", ".join(gone))
+    prices = {k: v for k, v in prices.items() if k in keep_syms}
     out = {"updated": today, "prices": prices}
     old_cpi = None
     if os.path.exists(out_file):

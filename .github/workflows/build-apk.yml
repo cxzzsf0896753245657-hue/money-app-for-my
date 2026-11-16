@@ -8,6 +8,7 @@ on:
       - "www/**"
       - "assets/**"
       - "package.json"
+      - "package-lock.json"
       - "capacitor.config.json"
       - ".github/workflows/build-apk.yml"
 
@@ -27,14 +28,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm              # 套件快取，不用每次重新下載
 
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: 安裝套件
-        run: npm install
+      - name: Gradle 快取（Android 打包用的套件）
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: 安裝套件（依 package-lock.json 固定版本）
+        run: npm ci
 
       - name: 建立 Android 專案
         run: npx cap add android
