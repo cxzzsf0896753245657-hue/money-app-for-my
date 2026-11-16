@@ -72,7 +72,8 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          # Maven 偶爾回 429（請求太多），失敗時等一下再試，最多 3 次
+          for i in 1 2 3; do ./gradlew assembleDebug && exit 0; echo "第 $i 次失敗，60 秒後重試"; sleep 60; done; exit 1
 
       - name: 整理檔名
         run: cp android/app/build/outputs/apk/debug/app-debug.apk money-app.apk
