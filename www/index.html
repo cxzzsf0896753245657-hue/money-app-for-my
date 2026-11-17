@@ -289,7 +289,7 @@ const APP_VER="2026.11.15";
 try{const ov=localStorage.getItem("mp_ver");if(ov!==APP_VER){const raw=localStorage.getItem("mp2");if(raw){localStorage.setItem("mp2_bak",raw);localStorage.setItem("mp2_bak_ver",ov||"舊版")}localStorage.setItem("mp_ver",APP_VER)}}catch(e){}
 if(!D){if(window.Capacitor){D={leds:[{n:"日用總資產",i:"notebook"}],mems:["自己"],budget:0,accs:[{id:1,n:"現金",t:"現金",init:0}],tx:[]};fix()}else seed()}else fix();
 updFx();updPrices();updCpi();
-function save(){try{localStorage.setItem("mp2",JSON.stringify(D))}catch(e){}
+function save(){clearTimeout(save.t);save.t=setTimeout(schedLow,1500);try{localStorage.setItem("mp2",JSON.stringify(D))}catch(e){}
  try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences;if(P){clearTimeout(window.__pt);window.__pt=setTimeout(()=>{try{P.set({key:"mp2",value:JSON.stringify(D)})}catch(e){}},600)}}catch(e){}}
 function seedMore(){const ad=(x,n)=>{const d=new Date(x+"T00:00");d.setDate(d.getDate()+n);return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};let k=1000,r=7;const R=()=>(r=(r*9301+49297)%233280)/233280,L="日用總資產",t0=today(),T=(date,type,cat,amt,acc,note,mem,to)=>D.tx.push({id:++k,time:"12:00:00",date,type,cat,amt,acc,mem:mem||"自己",led:L,note:note||"",cur:(D.accs.find(x=>x.id==acc)||{}).cur||"TWD",...(to?{to}:{})});
  D.accs.push({id:10,n:"元大台灣50",t:"股票",init:0,st:"on",isd:ad(t0,-360),hold:[{id:101,mk:"tw",sym:"0050",n:"0050",sh:650,cost:120000,p:190.5,bd:ad(t0,-360)}]},
@@ -356,7 +356,7 @@ function vBook_(){
  const left=Math.max(0,Math.ceil((new Date(y+"-12-31")-new Date(today()))/864e5)),pc=ybud()?Math.min(100,used/ybud()*100):0;
  let h=`<div style="height:calc(8px + env(safe-area-inset-top,0px))"></div>`+
  `<div class="chips">${["總資產",...D.leds.map(l=>l.n)].map(n=>{const l=D.leds.find(x=>x.n==n);return`<button class="chip ${S.led==n?"on":""}" onclick="S.fx='nu@b';S.led='${esc(n)}';render()">${ic(l?l.i:"book-open",18)}${esc(n)}</button>`}).join("")}</div>
- ${ccAlert()}<section class="card sumc"><div style="margin:-6px 0 4px;color:var(--tx)">${mnav()}</div><div class="sl">${S.br?"期間":"本月"}結餘・${esc(S.led)}</div><div class="sb ${i-e<0?"exp":""}" data-cu="book:bal">${(i-e<0?"-":"")+fmt(Math.abs(i-e))}</div>
+ ${recAlert()}${ccAlert()}<section class="card sumc"><div style="margin:-6px 0 4px;color:var(--tx)">${mnav()}</div><div class="sl">${S.br?"期間":"本月"}結餘・${esc(S.led)}</div><div class="sb ${i-e<0?"exp":""}" data-cu="book:bal">${(i-e<0?"-":"")+fmt(Math.abs(i-e))}</div>
  <div class="s2"><div><span class="sl">收入</span><b class="inc">${fmt(i)}</b></div><div class="dv"></div><div><span class="sl">支出</span><b class="exp">${fmt(e)}</b></div></div>
  ${ybud()?`<div class="sbd"><div class="tr"><span>${y} 年度預算已用 <b>${Math.round(pc)}%</b></span><span style="color:var(--sub)">剩 ${fmt(Math.max(0,ybud()-used))}</span></div><div class="sp"><i style="width:${pc}%;${pc>=100?"background:var(--exp)":""}"></i></div><small class="s">日均可花 ${fmt(left?Math.max(0,ybud()-used)/left:0)}</small></div>`:""}</section>`;
  h+="<!--fx:b-->";if(!L.length)return h+empty("notebook-pen","這個月還沒有記錄<br>點下方的「＋」記下第一筆");
@@ -463,6 +463,24 @@ function ccNext(a){if(a.t!="信用卡"||!(a.sd>0))return null;
 const dTxt=n=>n==0?"今天":n+" 天後",mdT=d=>(d.getMonth()+1)+"/"+d.getDate();
 function ccTxt(a){const c=ccNext(a);if(!c)return"";const hot=c.dd!=null&&c.dd<=3;
  return`結帳日 每月 ${a.sd} 日（${dTxt(c.dc)}）${c.due?`・<span class="${hot?"exp":""}" style="${hot?"font-weight:700":""}">繳款 ${mdT(c.due)}（${dTxt(c.dd)}）</span>`:""}`}
+function recLow(days){const t=today(),lim=addD(t,days||3),ev={};
+ D.rec.forEach(r=>{let d=r.next,n=0;while(d<=lim&&n++<40){const tr=r.type=="trf";
+  if(r.acc&&(r.type=="exp"||tr))(ev[r.acc]=ev[r.acc]||[]).push({d,v:-r.amt,r});
+  if(r.acc&&r.type=="inc")(ev[r.acc]=ev[r.acc]||[]).push({d,v:r.amt,r});
+  if(tr&&r.to){const A=D.accs.find(a=>a.id==r.acc),B=D.accs.find(a=>a.id==r.to);(ev[r.to]=ev[r.to]||[]).push({d,v:r.amt*(A?rate(A.cur):1)/(B?rate(B.cur):1),r})}
+  d=adv(d,r.f,r.day,r.nd)}});
+ return Object.entries(ev).map(([id,E])=>{const a=D.accs.find(x=>x.id==+id);if(!a||a.st=="off"||a.t=="信用卡")return null;
+  E.sort((x,y)=>x.d.localeCompare(y.d)||y.v-x.v);let b=bal(a),lo=b,ld=null;const out=E.filter(e=>e.v<0);
+  let fn=null,fs=0;E.forEach(e=>{b+=e.v;if(b<lo){lo=b;ld=e.d}if(fn==e.d&&b<0)fs=-b;if(b<0&&!fn){fn=e.d;fs=-b}});return lo<0?{a,now:bal(a),need:-out.reduce((s,e)=>s+e.v,0),short:-lo,ld,fn,fs,out}:null}).filter(Boolean)}
+// 手機通知：預先排好「扣款日前 3 天早上 9 點」的提醒；每次存檔後重排
+async function schedLow(){const LN=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;if(!LN||!D)return;
+ try{const L=D.ui&&D.ui.lowOff?[]:recLow(35).filter(x=>x.fn),now=Date.now(),N=[];
+  L.forEach((x,i)=>{const d=new Date(addD(x.fn,-3)+"T09:00");if(d.getTime()<now+6e4)return;const it=x.out.filter(e=>e.d<=x.fn);N.push({id:7000+i,title:"扣款餘額不足提醒",body:`${x.a.n} 在 ${(+x.fn.slice(5,7))}/${+x.fn.slice(8)} 要扣 ${it.map(e=>recName(e.r)).join("、")}，預計餘額會不足 ${fmtC(x.fs,x.a.cur)}`,schedule:{at:d,allowWhileIdle:true}})});
+  const P=await LN.getPending();const old=(P.notifications||[]).filter(n=>n.id>=7000&&n.id<7100).map(n=>({id:n.id}));if(old.length)await LN.cancel({notifications:old});
+  if(!N.length)return;let pm=await LN.checkPermissions();if(pm.display=="prompt"||pm.display=="prompt-with-rationale")pm=await LN.requestPermissions();if(pm.display!="granted")return;
+  await LN.schedule({notifications:N})}catch(e){console.log("schedLow",e)}}
+function recAlert(){const L=recLow(3);if(!L.length)return"";
+ return`<section class="card p" style="border-left:4px solid var(--exp)"><div class="tr"><b>${ic("bell",16)} 扣款餘額不足</b><small class="s">3 天內</small></div>${L.map(x=>`<button class="tr" style="width:100%;text-align:left;margin-top:8px;gap:8px" onclick="openAccD(${x.a.id})"><span style="min-width:0"><b>${esc(x.a.n)}</b>　<small class="s">${x.out.map(e=>(+e.d.slice(5,7))+"/"+(+e.d.slice(8))+" "+esc(recName(e.r))).join("、")}</small><small class="s" style="display:block">目前 ${fmtC(x.now,x.a.cur)}，3 天內要扣 ${fmtC(x.need,x.a.cur)}</small></span><b class="exp" style="white-space:nowrap">差 ${fmtC(x.short,x.a.cur)}</b></button>`).join("")}</section>`}
 function ccAlert(){const L=D.accs.filter(a=>a.st!="off").map(a=>({a,c:ccNext(a)})).filter(x=>x.c&&x.c.due&&x.c.dd<=7).sort((x,y)=>x.c.dd-y.c.dd);
  if(!L.length)return"";return`<section class="card p" style="border-left:4px solid var(--exp)"><div class="tr"><b>${ic("bell",16)} 信用卡繳款提醒</b></div>${L.map(({a,c})=>`<div class="tr" style="margin-top:6px"><span>${esc(a.n)}　<small class="s">${mdT(c.due)} 繳款（${dTxt(c.dd)}）</small></span><b class="exp">帳單消費 ${fmtC(c.bill,a.cur)}</b></div>`).join("")}</section>`}
 function ccCard(a){const c=ccNext(a);if(!c)return a.t=="信用卡"?`<section class="card p"><div class="tr"><b>信用卡帳單</b><button class="pill" style="margin:0" onclick="editAcc(${a.id})">設定結帳日</button></div><small class="s">設定結帳日與繳款日後，這裡會顯示倒數與帳單金額。</small></section>`:"";
@@ -509,7 +527,7 @@ function pgRecs(){
  const h=pbar("週期記帳","chevron-left",ib("plus","pgo('recnew')","新增"));
  if(!D.rec.length)return h+empty("repeat","還沒有週期記帳<br>例如每月房租、訂閱費、定期轉帳")+add;
  return h+`<section class="card" style="padding:0 16px">`+D.rec.map(r=>{const tr=r.type=="trf",c=r.dca?{i:"trending-up",c:"#df8a72"}:tr?{i:"arrow-left-right",c:"#6f7a93"}:fnd(r.type,r.cat),cu=(D.accs.find(x=>x.id==(r.acc||r.to))||{}).cur;
-  return`<button class="row" onclick="editRec(${r.id})">${tl(c.i,c.c)}<div class="m"><div>${esc(recName(r))}</div><small>${flT(r)}・下次 ${r.next}・${r.acc?esc(accN(r.acc)):"不扣款"}${tr?" → "+esc(accN(r.to)):""}</small></div><b class="${tr?"":r.type}">${fmtC(r.amt,cu)}</b></button>`}).join("")+`</section><small class="s" style="margin:0 16px 12px">開啟 app 時，到期的項目會自動入帳。</small>`+add}
+  return`<button class="row" onclick="editRec(${r.id})">${tl(c.i,c.c)}<div class="m"><div>${esc(recName(r))}</div><small>${flT(r)}・下次 ${r.next}・${r.acc?esc(accN(r.acc)):"不扣款"}${tr?" → "+esc(accN(r.to)):""}</small></div><b class="${tr?"":r.type}">${fmtC(r.amt,cu)}</b></button>`}).join("")+`</section><small class="s" style="margin:0 16px 8px">開啟 app 時，到期的項目會自動入帳。扣款前 3 天若預估餘額不足，記帳本首頁會顯示提醒。</small><section class="card" style="padding:0 16px"><button class="row" onclick="uiFix();D.ui.lowOff=!D.ui.lowOff;save();render()">${tl("bell","#c9a04a")}<div class="m"><div>手機通知</div><small>扣款前 3 天早上 9 點通知餘額不足（僅 App 版）</small></div><b style="color:${D.ui&&D.ui.lowOff?"var(--sub)":"var(--pri)"}">${D.ui&&D.ui.lowOff?"已關閉":"已開啟"}</b></button></section>`+add}
 function pgRecNew(){const it=(i,c,t,sb,k)=>`<button class="row" style="padding:8px 16px" onclick="newRec('${k}')">${tl(i,c,48)}<div class="m"><div style="font-size:17px">${t}</div><small>${sb}</small></div>${ic("chevron-right",20)}</button>`;
  return pbar("新增週期記帳類型","chevron-left","","pgo('recs')")+`<section class="card" style="padding:0">`+it("circle-dollar-sign","#c9a04a","固定收支","固定或週期性收支項目","ie")+it("arrow-left-right","#6b8fd6","固定轉帳","固定或週期性轉帳項目","trf")+it("trending-up","#df8a72","定期定額","固定金額定期買進股票、基金或債券","dca")+`</section>`}
 function newRec(kind,accId){const A=D.accs.filter(a=>a.st!="off"),cash=A.filter(a=>!["股票","基金","債券"].includes(a.t));
@@ -1235,6 +1253,6 @@ function syncHist(){const L=lvl();while(hd<L)history.pushState({l:++hd},"")}
   const mo=new MutationObserver(syncHist);mo.observe($("md"),{attributes:true,attributeFilter:["class"]});mo.observe($("pkv"),{attributes:true,attributeFilter:["style"]});mo.observe($("main"),{childList:true})}catch(e){}})();
 function restoreBak(){if(!confirm("要還原成「更新前」的資料嗎？目前的資料會被取代。"))return;try{localStorage.setItem("mp2",localStorage.getItem("mp2_bak"));location.reload()}catch(e){toast("還原失敗")}}
 try{if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)&&!window.Capacitor&&location.hostname!="localhost")navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
-render();
+render();setTimeout(schedLow,3000);
 </script>
 <script>(async function(){try{var C=window.Capacitor,P=C&&C.Plugins&&C.Plugins.Preferences;if(P&&!localStorage.getItem("mp2")){var r=await P.get({key:"mp2"});if(r&&r.value)localStorage.setItem("mp2",r.value)}}catch(e){}var s=document.createElement("script");s.text=document.getElementById("app-src").textContent;document.body.appendChild(s)})()</script></body></html>
