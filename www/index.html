@@ -599,6 +599,7 @@ function keep(){const f=S.f,g=id=>$(id);if(g("fa"))f.acc=+g("fa").value;if(g("fm
 function setType(v){keep();S.f.fx=v=="fx"?1:0;if(v=="fx")v="trf";S.f.type=v;if(v!="trf"){S.f.cat=(recList(v)[0]||{}).k;S.f.tab="rec"}sheet()}
 function pickCat(k){S.f.cat=k;document.querySelectorAll(".cg button").forEach(b=>b.classList.toggle("on",b.dataset.k==k))}
 function sheet(){
+ const sy={"*":"×","/":"÷","-":"−","+":"+"};
  const f=S.f,tr=f.type=="trf",ac=D.accs.find(a=>a.id==f.acc)||D.accs[0]||{},cu=ac.cur||"TWD";
  const AL=D.accs.filter(a=>a.st!="off"||a.id==f.acc||a.id==f.to),TY={exp:["shopping-cart","支出"],inc:["circle-dollar-sign","收入"],trf:["arrow-left-right","轉帳"]};
  S.al=(ac.n||"")+"("+cu+")";
@@ -608,7 +609,6 @@ function sheet(){
  else{
   const cs=C[f.type],tabI=f.tab=="rec"||!cs[f.tab]?"rec":f.tab,items=tabI=="rec"?recList(f.type):cs[tabI].s.map(x=>({k:cs[tabI].n+"/"+x[0],n:x[0],i:x[1],c:cs[tabI].c}));
   mid=`<div class="ctabs"><button class="${tabI=="rec"?"on":""}" onclick="keep();S.f.tab='rec';sheet()">${ic("sparkles",18)}推薦</button>${cs.map((p,i)=>`<button class="${tabI===i?"on":""}" onclick="keep();S.f.tab=${i};sheet()">${tl(p.i,p.c,28)}${esc(p.n)}</button>`).join("")}</div><div style="flex:1;overflow:auto">${tabI=="rec"&&!S.rh?`<div class="tip">${ic("sparkles",16)}<span>依最近半年的紀錄，推薦常用類別</span>${ib("x","S.rh=1;keep();sheet()","關閉提示")}</div>`:""}<div class="cg">${items.map(c=>`<button class="${f.cat==c.k?"on":""}" data-k="${esc(c.k)}" onclick="pickCat(this.dataset.k)">${tl(c.i,c.c,44)}${esc(c.n)}</button>`).join("")}</div></div>`}
- const keys=[["7","8","9","*"],["4","5","6","/"],["1","2","3","-"],[".","0","del","+"]],sy={"*":"×","/":"÷","-":"−","+":"+"};
  const kk=(k,c)=>`<button class="k ${c}" onclick="key('${k}')" ${k=="del"?'aria-label="刪除"':""}>${k=="del"?ic("delete",24):sy[k]||k}</button>`;
  const dg=[["7","8","9"],["4","5","6"],["1","2","3"],[".","0","del"]],ops=["/","*","-","+"];
  const pad=dg.map((r,i)=>r.map(k=>kk(k,k=="del"?"o":"")).join("")+kk(ops[i],"o")).join("");
