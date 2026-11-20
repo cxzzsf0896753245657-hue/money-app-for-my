@@ -178,6 +178,7 @@ textarea{height:96px;padding:8px 12px;font-size:12px}
 
 input[type=checkbox]{width:20px;height:20px;margin:0;flex:none;accent-color:var(--pri);padding:0}details>summary{cursor:pointer;min-height:48px;display:flex;align-items:center;padding:0 16px;font-weight:600}
 .pkv{position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;max-width:430px;margin:0 auto}
+.pkf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 12px 14px}.pkf small{grid-column:1/-1;color:var(--sub);font-size:13px;font-weight:600;padding:0 4px}.pkc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border-radius:16px;background:var(--card);box-shadow:var(--sh);border:2px solid transparent;min-width:0;font-size:14px;font-weight:600}.pkc span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pkc.on{border-color:var(--pri);background:var(--soft)}
 .pkg{padding:14px 16px 4px;color:var(--sub);font-size:13px;font-weight:600}
 .pkr{background:var(--card);padding:6px 16px;min-height:52px}
 .pkb{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font:inherit;font-size:16px;margin:4px 0;text-align:left;color:var(--tx)}
@@ -966,7 +967,7 @@ const accRow=(a,pre)=>[pre+a.id,a.n,a.t+"・"+(a.cur||"TWD")+"・餘額 "+fmtC(b
 // 最近半年最常用的帳戶（依記帳類型；轉帳分轉出 acc／轉入 to）
 function accFav(list,kind,field){const since=addD(today(),-183),c={};D.tx.forEach(t=>{if(t.adj||t.date<since||t.type!=kind)return;const id=t[field||"acc"];if(id!=null)c[id]=(c[id]||0)+1});
  return list.filter(a=>c[a.id]).sort((x,y)=>c[y.id]-c[x.id]).slice(0,5)}
-const accOpt=(list,v,pre="",fav)=>(fav&&fav.length?`<optgroup label="常用帳戶（最近半年）">${opt(fav.map(a=>accRow(a,pre)),v)}</optgroup>`:"")+grpAccs(list).map(G=>G.types.map(T=>`<optgroup label="${esc(G.g)} › ${esc(T.t)}">${opt(T.items.map(a=>accRow(a,pre)),v)}</optgroup>`).join("")).join("");
+const accOpt=(list,v,pre="",fav)=>(fav&&fav.length?`<optgroup label="常用帳戶">${opt(fav.map(a=>[pre+a.id,a.n,a.t]),v)}</optgroup>`:"")+grpAccs(list).map(G=>G.types.map(T=>`<optgroup label="${esc(G.g)} › ${esc(T.t)}">${opt(T.items.map(a=>accRow(a,pre)),v)}</optgroup>`).join("")).join("");
 function accChk(nm,arr){return grpAccs(D.accs).map(G=>`<div class="pkg">${G.g}</div>`+G.types.map(T=>`<div style="padding:0 16px;color:var(--sub);font-size:13px">${T.t}</div>`+T.items.map(a=>`<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px"><input type="checkbox" name="${nm}" value="${a.id}" ${arr.map(String).includes(String(a.id))?"checked":""}>${esc(a.n)}</label>`).join("")).join("")).join("")}
 const PICKS={},PT={v7:"結帳日",v8:"繳款日",v1:"市場",r9:"投資標的",v6:"大項目",g1:"帳戶",g2:"成員",v2:"類型",v4:"幣別",v5:"狀態",r2:"類別",r3:"成員",r4:"從帳戶",r5:"到帳戶",r6:"週期",x2:"原幣別",x3:"目標幣別",fl:"帳本",fa:"帳戶",fto:"轉入帳戶",fm:"成員",c1:"類別",cm:"匯入方式",b2:"週期",b3:"帳本"};
 function upSel(){document.querySelectorAll("select").forEach(sel=>{
@@ -983,14 +984,14 @@ function upSel(){document.querySelectorAll("select").forEach(sel=>{
 function openPick(id){clearTimeout(closePick.t);$("pkv").classList.remove("po");const inp=$(id),data=PICKS[id];if(!inp||!data)return;
  const ttl=inp.dataset.t||(id=="fa"&&S.f&&S.f.type=="trf"?"轉出帳戶":PT[id])||"選擇",cur=inp.value,n=data.reduce((a,g)=>a+g.items.length,0);
  const rows=g=>g.items.map(([v,l,sb])=>`<button class="row pkr" data-v="${esc(v)}" onclick="pickVal('${id}',this.dataset.v)"><div class="m"><div>${esc(l)}</div>${sb?`<small>${esc(sb)}</small>`:""}</div>${String(v)==String(cur)?`<span style="color:var(--pri)">${ic("check",22)}</span>`:""}</button>`).join("");
- const pv=$("pkv");pv.innerHTML=`<div class="ah">${ib("chevron-left","closePick()","返回")}<div style="font-size:18px;font-weight:700;flex:1">${esc(ttl)}</div></div>${n>10?`<div style="padding:8px 12px;background:var(--card)"><input id="pks" placeholder="搜尋" oninput="pickFilter(this.value)" style="margin:0"></div>`:""}<div id="pkl" style="flex:1;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))">${data.map(g=>(g.g?`<div class="pkg">${esc(g.g)}</div>`:"")+rows(g)).join("")}</div>`;
- pv.style.display="flex";const on=[...pv.querySelectorAll(".pkr")].find(b=>b.dataset.v==cur);if(on&&on.scrollIntoView)on.scrollIntoView({block:"center"})}
+ const pv=$("pkv");pv.innerHTML=`<div class="ah">${ib("chevron-left","closePick()","返回")}<div style="font-size:18px;font-weight:700;flex:1">${esc(ttl)}</div></div>${n>10?`<div style="padding:8px 12px;background:var(--card)"><input id="pks" placeholder="搜尋" oninput="pickFilter(this.value)" style="margin:0"></div>`:""}<div id="pkl" style="flex:1;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))">${data.map(g=>g.g=="常用帳戶"?`<div class="pkf"><small>常用帳戶</small>${g.items.map(([v,l,t])=>`<button class="pkc ${String(v)==String(cur)?"on":""}" data-v="${esc(v)}" onclick="pickVal('${id}',this.dataset.v)">${tl(AI[t]||"wallet",ACOL[t]||"#5f78b8",36)}<span>${esc(l)}</span></button>`).join("")}</div><div class="pkg">全部帳戶</div>`:(g.g?`<div class="pkg">${esc(g.g)}</div>`:"")+rows(g)).join("")}</div>`;
+ pv.style.display="flex";const on=!pv.querySelector(".pkc.on")&&[...pv.querySelectorAll(".pkr")].find(b=>b.dataset.v==cur);if(on&&on.scrollIntoView)on.scrollIntoView({block:"center"})}
 function closePick(){const p=$("pkv");if(p.style.display=="none"||p.classList.contains("po"))return;p.classList.add("po");closePick.t=setTimeout(()=>{p.style.display="none";p.classList.remove("po")},200)}
 function pickVal(id,v){const inp=$(id);if(!inp)return closePick();inp.value=v;
  const b=$("pb_"+id);if(b){const it=(PICKS[id]||[]).flatMap(g=>g.items).find(x=>String(x[0])==String(v));b.firstChild.textContent=it?it[1]:""}
  closePick();const oc=inp.getAttribute("data-oc");if(oc)new Function(oc).call(inp)}
 function pickFilter(q){q=q.trim().toLowerCase();const l=$("pkl");let head=null,any=false;
- [...l.children].forEach(el=>{if(el.classList.contains("pkg")){if(head)head.style.display=any?"":"none";head=el;any=false}else{const ok=!q||el.textContent.toLowerCase().includes(q);el.style.display=ok?"":"none";if(ok)any=true}});if(head)head.style.display=any?"":"none"}
+ [...l.children].forEach(el=>{if(el.classList.contains("pkf")){el.style.display=q?"none":"";return}if(el.classList.contains("pkg")){if(head)head.style.display=any?"":"none";head=el;any=false}else{const ok=!q||el.textContent.toLowerCase().includes(q);el.style.display=ok?"":"none";if(ok)any=true}});if(head)head.style.display=any?"":"none"}
 new MutationObserver(()=>{if(document.querySelector("select"))upSel()}).observe(document.body,{childList:true,subtree:true});
 
 const cv=v=>{const a=Math.abs(v),g=v<0?"-":"";return a>=10000?g+(a/10000).toFixed(2).replace(/\.?0+$/,"")+"萬":g+Math.round(a).toLocaleString("en-US")};
