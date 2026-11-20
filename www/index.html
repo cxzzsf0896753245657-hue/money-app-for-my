@@ -178,6 +178,7 @@ textarea{height:96px;padding:8px 12px;font-size:12px}
 
 input[type=checkbox]{width:20px;height:20px;margin:0;flex:none;accent-color:var(--pri);padding:0}details>summary{cursor:pointer;min-height:48px;display:flex;align-items:center;padding:0 16px;font-weight:600}
 .pkv{position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;max-width:430px;margin:0 auto}
+.row.na .nai{flex:none;width:26px;display:grid;place-items:center;color:var(--sub);margin-right:-4px}
 .pkf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 12px 14px}.pkf small{grid-column:1/-1;color:var(--sub);font-size:13px;font-weight:600;padding:0 4px}.pkc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border-radius:16px;background:var(--card);box-shadow:var(--sh);border:2px solid transparent;min-width:0;font-size:14px;font-weight:600}.pkc span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pkc.on{border-color:var(--pri);background:var(--soft)}
 .pkg{padding:14px 16px 4px;color:var(--sub);font-size:13px;font-weight:600}
 .pkr{background:var(--card);padding:6px 16px;min-height:52px}
@@ -375,7 +376,7 @@ function vWal(){
  const tw=L=>L.filter(a=>a.st=="on").reduce((x,a)=>x+bm[a.id]*rate(a.cur),0);
  grpAccs(act).forEach(G=>{h+=`<div class="tr" style="padding:8px 20px 4px"><b style="font-size:17px">${G.g}</b><span style="color:var(--sub);font-size:14px">${fmt(tw(G.types.flatMap(T=>T.items)))}</span></div>`;
   G.types.forEach(T=>{const sm=tw(T.items);
-   const tu=unrealAll(T.items.filter(a=>a.st=="on"));h+=`<section class="card gc"><div class="gh"><div class="ght"><b>${T.t}</b><span class="gta">${sm<0?"負債":"資產"} <b>${fmt(Math.abs(sm))}</b></span></div>${T.items.some(a=>(a.hold||[]).length)?`<div class="ghs"><div><small>未實現損益</small><b class="${tu>=0?"inc":"exp"}">${tu>=0?"+":"-"}${fmt(Math.abs(tu))}</b></div>${(()=>{const gx=groupXirr(T.items.filter(a=>a.st=="on"&&(a.hold||[]).length));return gx&&!gx.short?`<div><small>我的年化</small><b class="${gx.r>=0?"inc":"exp"}">${pc1(gx.r)}</b></div>`:""})()}</div>`:""}</div>`+T.items.map(a=>{const b=bm[a.id],ut=uTxt(a),cc=ccTxt(a),sb=[a.st=="noasset"?"不計入資產":"",ut,cc].filter(Boolean).join("<br>");return`<button class="row" onclick="openAccD(${a.id})">${tl(AI[a.t],ACOL[a.t])}<div class="m"><div>${esc(a.n)}</div>${sb?`<small>${sb}</small>`:""}</div><div class="r"><b class="${b<0?"exp":""}" style="${a.st=="noasset"?"opacity:.6":""}">${fmtC(b,a.cur)}</b>${a.cur||"TWD"}</div></button>`}).join("")+`</section>`})});
+   const tu=unrealAll(T.items.filter(a=>a.st=="on"));h+=`<section class="card gc"><div class="gh"><div class="ght"><b>${T.t}</b><span class="gta">${sm<0?"負債":"資產"} <b>${fmt(Math.abs(sm))}</b></span></div>${T.items.some(a=>(a.hold||[]).length)?`<div class="ghs"><div><small>未實現損益</small><b class="${tu>=0?"inc":"exp"}">${tu>=0?"+":"-"}${fmt(Math.abs(tu))}</b></div>${(()=>{const gx=groupXirr(T.items.filter(a=>a.st=="on"&&(a.hold||[]).length));return gx&&!gx.short?`<div><small>我的年化</small><b class="${gx.r>=0?"inc":"exp"}">${pc1(gx.r)}</b></div>`:""})()}</div>`:""}</div>`+T.items.map(a=>{const b=bm[a.id],ut=uTxt(a),cc=ccTxt(a),na=a.st=="noasset",sb=[ut,cc].filter(Boolean).join("<br>");return`<button class="row${na?" na":""}" onclick="openAccD(${a.id})"${na?' aria-label="'+esc(a.n)+'（不計入資產）"':""}>${na?NOAS:""}${tl(AI[a.t],ACOL[a.t])}<div class="m"><div>${esc(a.n)}</div>${sb?`<small>${sb}</small>`:""}</div><div class="r"><b class="${b<0?"exp":""}">${fmtC(b,a.cur)}</b>${a.cur||"TWD"}</div></button>`}).join("")+`</section>`})});
  return h}
 function arcs(items,tot){
  let a=-Math.PI/2+(S.rot||0),h="";const P=(r,t)=>[150+r*Math.cos(t),150+r*Math.sin(t)];
@@ -965,6 +966,7 @@ const typeOpt=v=>BG.map(g=>`<optgroup label="${g}">${opt(AT.filter(t=>TG[t]==g).
 const bigOpt=v=>opt([["","依類型自動"],...BG.map(g=>[g,g])],v);
 const accRow=(a,pre)=>[pre+a.id,a.n,a.t+"・"+(a.cur||"TWD")+"・餘額 "+fmtC(bal(a),a.cur)+((a.hold||[]).length?"（市值 "+fmtC(balV(a),a.cur)+"）":"")];
 // 最近半年最常用的帳戶（依記帳類型；轉帳分轉出 acc／轉入 to）
+const NOAS=`<span class="nai" title="不計入資產"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16.5 7.5c0-1.9-2-3-4.5-3s-4.5 1.1-4.5 3 2 2.6 4.5 3.3 4.5 1.6 4.5 3.7-2 3.3-4.5 3.3-4.5-1.2-4.5-3"/><path d="M4.5 4.5l15 15"/></svg></span>`;
 function accFav(list,kind,field){const since=addD(today(),-183),c={};D.tx.forEach(t=>{if(t.adj||t.date<since||t.type!=kind)return;const id=t[field||"acc"];if(id!=null)c[id]=(c[id]||0)+1});
  return list.filter(a=>c[a.id]).sort((x,y)=>c[y.id]-c[x.id]).slice(0,5)}
 const accOpt=(list,v,pre="",fav)=>(fav&&fav.length?`<optgroup label="常用帳戶">${opt(fav.map(a=>[pre+a.id,a.n,a.t]),v)}</optgroup>`:"")+grpAccs(list).map(G=>G.types.map(T=>`<optgroup label="${esc(G.g)} › ${esc(T.t)}">${opt(T.items.map(a=>accRow(a,pre)),v)}</optgroup>`).join("")).join("");
