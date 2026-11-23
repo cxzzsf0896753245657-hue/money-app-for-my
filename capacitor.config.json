@@ -3,6 +3,12 @@
   "appName": "記帳本",
   "webDir": "www",
   "plugins": {
-    "CapacitorHttp": { "enabled": true }
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_wallet",
+      "iconColor": "#3D5BD6"
+    }
   }
 }

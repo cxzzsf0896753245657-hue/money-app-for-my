@@ -53,6 +53,11 @@ jobs:
       - name: 產生 App 圖示
         run: npx capacitor-assets generate --android
 
+      - name: 通知列小圖示
+        run: |
+          mkdir -p android/app/src/main/res/drawable
+          cp assets/notify/ic_stat_wallet.xml android/app/src/main/res/drawable/
+
       - name: 寫入 App 版本號（跟 Release 一致；換版時 App 會自動保留一份更新前的資料備份）
         run: sed -i 's/const APP_VER="[^"]*"/const APP_VER="1.0.${{ github.run_number }}"/' www/index.html && grep -o 'const APP_VER="[^"]*"' www/index.html
 
