@@ -19,6 +19,11 @@
 - 打包完成會自動發布到 **Releases**，版本號是 `v1.0.執行次數`。
 - **最新版固定下載連結**（存成手機書籤，點了就下載最新 APK）：
   `https://github.com/cxzzsf0896753245657-hue/money-app-for-my/releases/latest/download/money-app.apk`
+- **線上更新（v1.0.24 起）**：App 開啟時會自動檢查 `www/index.html` 有沒有新版，有的話在背景下載，畫面下方出現「新版已下載完成 → 立即套用」。不用再下載 APK。
+  - 只有加了新的手機功能（新套件、圖示、權限）時才需要重新安裝 APK。
+  - 套用後若 App 打不開，下次開啟會自動退回安裝包內建的版本；改裝新的 APK 後也會自動丟掉舊的線上版本。
+  - 這個功能讀的是公開的 raw.githubusercontent.com，repo 改成 Private 就會失效。
+  - 修改 `www/index.html` 時請一併更新裡面的 `APP_VER`（日期即可），設定頁會顯示這個版本。
 - 想手動重打包：到 **Actions** → **build-apk** → **Run workflow**。
 - 只有 `prices.json` 變動（每天抓股價）不會觸發打包。
 - 手機 App 全新安裝時是空白的（只有一個「現金」帳戶），請到「更多 → 備份與還原」還原備份；網頁版第一次開啟則會載入範例資料。

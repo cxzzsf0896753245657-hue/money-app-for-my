@@ -179,6 +179,7 @@ textarea{height:96px;padding:8px 12px;font-size:12px}
 input[type=checkbox]{width:20px;height:20px;margin:0;flex:none;accent-color:var(--pri);padding:0}details>summary{cursor:pointer;min-height:48px;display:flex;align-items:center;padding:0 16px;font-weight:600}
 .pkv{position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;max-width:430px;margin:0 auto}
 .nai-i{display:inline-grid!important;vertical-align:-5px;width:auto!important;margin:0!important}.nai{flex:none;width:26px;display:grid;place-items:center;color:var(--sub);margin-right:-4px}
+.otab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:8px;background:var(--hero);color:#fff;border-radius:22px;padding:6px 6px 6px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:14px;white-space:nowrap}.otab button{height:34px;padding:0 14px;border-radius:17px;background:#fff;color:var(--hero);font-weight:700}.otab button.x{background:transparent;color:#fff;padding:0 8px}
 .pkf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 12px 14px}.pkf small{grid-column:1/-1;color:var(--sub);font-size:13px;font-weight:600;padding:0 4px}.pkc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border-radius:16px;background:var(--card);box-shadow:var(--sh);border:2px solid transparent;min-width:0;font-size:14px;font-weight:600}.pkc span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pkc.on{border-color:var(--pri);background:var(--soft)}
 .pkg{padding:14px 16px 4px;color:var(--sub);font-size:13px;font-weight:600}
 .pkr{background:var(--card);padding:6px 16px;min-height:52px}
@@ -288,7 +289,18 @@ const rid=()=>Date.now()+Math.floor(Math.random()*1e6);
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 let D=null,S={tab:"book",led:"總資產",ym:today().slice(0,7),ct:"exp",sub:"cat",edit:null,f:{},fl:{},rot:0};
 try{D=JSON.parse(localStorage.getItem("mp2"))}catch(e){}
-const APP_VER="2026.11.15";
+const APP_VER="2026.11.26";
+// 線上更新（僅 App 版）：從 GitHub 讀最新的頁面，有變動就存起來，重新開啟後套用
+const OTA_URL="https://raw.githubusercontent.com/cxzzsf0896753245657-hue/money-app-for-my/main/www/index.html";
+const isApp=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+function pageKey(h){const st=(/<style>([\s\S]*?)<\/style>/.exec(h)||[])[1]||"",src=(/id="app-src" type="text\/plain">([\s\S]*?)<\/script>/.exec(h)||[])[1]||"",t=(st+src).replace(/const APP_VER="[^"]*"/,"");let x=5381;for(let i=0;i<t.length;i++)x=(x*33+t.charCodeAt(i))|0;return t.length+":"+(x>>>0)}
+async function otaCheck(manual){if(!isApp()){if(manual)toast("網頁版每次開啟就是最新版");return}const P=Capacitor.Plugins.Preferences;
+ try{const r=await fetch(OTA_URL+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;const t=await r.text();if(t.indexOf('id="app-src"')<0||t.indexOf("</html>")<0)throw 0;
+  const key=pageKey(t),cur=localStorage.getItem("ota_key")||pageKey(document.documentElement.outerHTML);if(key===cur){if(manual)toast("已經是最新版");return}
+  await P.set({key:"ota_html",value:t});localStorage.setItem("ota_key",key);localStorage.setItem("ota_apk",window.__apkVer||APP_VER);localStorage.removeItem("ota_try");
+  document.body.insertAdjacentHTML("beforeend",`<div class="otab" id="otab"><span>新版已下載完成</span><button onclick="location.reload()">立即套用</button><button class="x" onclick="this.parentNode.remove()" aria-label="稍後">${ic("x",16)}</button></div>`)}
+ catch(e){if(manual)toast("檢查更新失敗，請確認網路")}}
+setTimeout(()=>{try{localStorage.removeItem("ota_try")}catch(e){}otaCheck()},4000);
 try{const ov=localStorage.getItem("mp_ver");if(ov!==APP_VER){const raw=localStorage.getItem("mp2");if(raw){localStorage.setItem("mp2_bak",raw);localStorage.setItem("mp2_bak_ver",ov||"舊版")}localStorage.setItem("mp_ver",APP_VER)}}catch(e){}
 if(!D){if(window.Capacitor){D={leds:[{n:"日用總資產",i:"notebook"}],mems:["自己"],budget:0,accs:[{id:1,n:"現金",t:"現金",init:0}],tx:[]};fix()}else seed()}else fix();
 updFx();updPrices();updCpi();
@@ -516,7 +528,7 @@ function ccSave(a){if(gv("v2")=="定存"&&+gv("t1")>0&&gv("t2")){const o=a.td||{
 function openAcc(){form("新增帳戶",accF(null),()=>{if(!gv("v1"))return false;const na={id:rid(),n:gv("v1"),t:gv("v2"),init:+gv("v3")||0,cur:gv("v4"),st:"on",...(gv("v6")?{g:gv("v6")}:{})};ccSave(na);D.accs.push(na)})}
 function openMem(){form("新增成員",`<small class="s">目前：${D.mems.map(esc).join("、")}</small><input id="v1" placeholder="成員名稱">`,()=>{if(!gv("v1"))return false;D.mems.push(gv("v1"))})}
 function ntRow(k,t,d){const off=D.ui&&D.ui[k];return`<button class="row" onclick="uiFix();D.ui.${k}=!D.ui.${k};save();openSet()">${tl("bell","#c9a04a")}<div class="m"><div>${t}</div><small>${d}</small></div><b style="color:${off?"var(--sub)":"var(--pri)"}">${off?"已關閉":"已開啟"}</b></button>`}
-function openSet(){pane("設定",`<div class="pkg" style="padding:4px 2px">手機通知（僅 App 版）</div><section class="card" style="margin:0 0 16px;padding:0 16px">${ntRow("lowOff","扣款餘額不足","固定收支、定期定額扣款前 3 天早上 9 點")}${ntRow("ccOff","信用卡帳單結帳","結帳日隔天早上 9 點，提醒本期消費與繳款日")}</section><div class="pkg" style="padding:4px 2px">資料</div><p style="color:var(--sub);margin:4px 0 12px">重設會刪除目前所有記錄。</p><div class="f2"><button class="btn o" onclick="seed();save();closeM();render()">載入範例資料</button><button class="btn o" onclick="clr()">清空全部</button></div>`)}
+function openSet(){pane("設定",`<div class="pkg" style="padding:4px 2px">App 更新</div><section class="card" style="margin:0 0 16px;padding:0 16px"><button class="row" onclick="otaCheck(true)">${tl("cloud-upload","#4a9f85")}<div class="m"><div>檢查更新</div><small>目前版本 ${APP_VER}${window.__otaOn?"（線上更新）":""}・開啟 App 時也會自動檢查</small></div></button></section>`+`<div class="pkg" style="padding:4px 2px">手機通知（僅 App 版）</div><section class="card" style="margin:0 0 16px;padding:0 16px">${ntRow("lowOff","扣款餘額不足","固定收支、定期定額扣款前 3 天早上 9 點")}${ntRow("ccOff","信用卡帳單結帳","結帳日隔天早上 9 點，提醒本期消費與繳款日")}</section><div class="pkg" style="padding:4px 2px">資料</div><p style="color:var(--sub);margin:4px 0 12px">重設會刪除目前所有記錄。</p><div class="f2"><button class="btn o" onclick="seed();save();closeM();render()">載入範例資料</button><button class="btn o" onclick="clr()">清空全部</button></div>`)}
 function openSearch(){pane("紀錄搜尋",`<input id="q" placeholder="搜尋備註、分類、金額" oninput="doSearch()"><div id="qr"></div>`);setTimeout(()=>$("q").focus(),50)}
 function doSearch(){const q=$("q").value.trim().toLowerCase();if(!q){$("qr").innerHTML="";return}
  const R=D.tx.filter(t=>!t.adj&&(t.note+t.cat+t.amt+t.mem).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,40);
@@ -608,7 +620,7 @@ async function updFx(force){
 async function refFx(){toast("更新中…");const r=await updFx(true);toast(r=="ok"?"匯率已更新":"無法連線，沿用上次匯率");openFx()}
 function fxc(){const R={TWD:1,...D.rates};$("x4").textContent=(+$("x1").value*R[$("x2").value]/R[$("x3").value]).toLocaleString("en-US",{maximumFractionDigits:3})+" "+$("x3").value}
 async function addFx(){const k=gv("x5").toUpperCase();if(k&&!D.rates[k]){D.rates[k]=1;save();await updFx(true);openFx()}}
-function openBak(){pane("備份與還原",`<small class="s" style="margin-bottom:8px">這個頁面無法連接 Google Drive。請複製備份文字，存到雲端硬碟或筆記；需要時貼回來還原。${D.lastBak?"上次備份："+D.lastBak:""}</small>${localStorage.getItem("mp2_bak")?`<div class="tr" style="margin:4px 0 10px;gap:8px"><small class="s">已自動保留更新前（${esc(localStorage.getItem("mp2_bak_ver")||"舊版")}）的資料</small><button class="pill" style="margin:0;flex:none" onclick="restoreBak()">還原</button></div>`:""}<small class="s" style="margin-bottom:6px">目前版本 ${APP_VER}</small><button class="btn" onclick="mkBak()">產生並複製備份</button><textarea id="bk" placeholder="貼上備份內容後按還原"></textarea><button class="btn o" onclick="rsBak()">還原</button>`)}
+function openBak(){pane("備份與還原",`<small class="s" style="margin-bottom:8px">這個頁面無法連接 Google Drive。請複製備份文字，存到雲端硬碟或筆記；需要時貼回來還原。${D.lastBak?"上次備份："+D.lastBak:""}</small>${localStorage.getItem("mp2_bak")?`<div class="tr" style="margin:4px 0 10px;gap:8px"><small class="s">已自動保留更新前（${esc(localStorage.getItem("mp2_bak_ver")||"舊版")}）的資料</small><button class="pill" style="margin:0;flex:none" onclick="restoreBak()">還原</button></div>`:""}<small class="s" style="margin-bottom:6px">目前版本 ${APP_VER}${window.__otaOn?"（線上更新）":""}</small><button class="btn" onclick="mkBak()">產生並複製備份</button><textarea id="bk" placeholder="貼上備份內容後按還原"></textarea><button class="btn o" onclick="rsBak()">還原</button>`)}
 function mkBak(){D.lastBak=today();save();const e=$("bk");e.value=JSON.stringify(D);e.select();try{document.execCommand("copy");toast("已複製")}catch(x){}}
 function rsBak(){try{const d=JSON.parse($("bk").value);if(!d.tx||!d.accs)throw 0;D=d;fix();save();closeM();render();toast("已還原")}catch(x){toast("備份內容無法讀取")}}
 const ev=x=>{const e=String(x).replace(/[+\-*/.]+$/,"");if(!e||!/^[0-9+\-*/.]+$/.test(e))return NaN;try{const v=Function('"use strict";return ('+e+')')();return isFinite(v)?Math.round(v*1000)/1000:NaN}catch(z){return NaN}};
@@ -1294,4 +1306,15 @@ function restoreBak(){if(!confirm("要還原成「更新前」的資料嗎？目
 try{if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)&&!window.Capacitor&&location.hostname!="localhost")navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 render();setTimeout(schedLow,3000);
 </script>
-<script>(async function(){try{var C=window.Capacitor,P=C&&C.Plugins&&C.Plugins.Preferences;if(P&&!localStorage.getItem("mp2")){var r=await P.get({key:"mp2"});if(r&&r.value)localStorage.setItem("mp2",r.value)}}catch(e){}var s=document.createElement("script");s.text=document.getElementById("app-src").textContent;document.body.appendChild(s)})()</script></body></html>
+<script>(async function(){var C=window.Capacitor,P=C&&C.Plugins&&C.Plugins.Preferences;
+/* 線上更新：App 版若已下載較新的頁面，就改用它（同一個來源，資料不受影響）。
+   ota_try：套用後若沒順利開起來，下次開啟就退回安裝包內建版本。ota_apk：換裝新 APK 後丟掉舊的線上版本。 */
+try{if(P&&!window.__otaOn){var m=/const APP_VER="([^"]*)"/.exec(document.getElementById("app-src").textContent);window.__apkVer=m?m[1]:"";
+ if(localStorage.getItem("ota_key")){var bad=localStorage.getItem("ota_try")||localStorage.getItem("ota_apk")!==window.__apkVer,h=bad?null:(await P.get({key:"ota_html"})).value;
+  if(h&&h.indexOf('id="app-src"')>0){var N=new DOMParser().parseFromString(h,"text/html"),ns=N.querySelector("style"),na=N.getElementById("app-src");
+   if(ns&&na){localStorage.setItem("ota_try","1");window.__otaOn=1;document.querySelector("style").textContent=ns.textContent;
+    [].slice.call(document.body.children).forEach(function(e){if(e.tagName!="SCRIPT")e.remove()});var first=document.body.firstChild;
+    [].slice.call(N.body.children).forEach(function(e){if(e.tagName!="SCRIPT")document.body.insertBefore(document.importNode(e,true),first)});
+    document.getElementById("app-src").textContent=na.textContent}}
+  if(!window.__otaOn){localStorage.removeItem("ota_key");localStorage.removeItem("ota_try");localStorage.removeItem("ota_apk");try{await P.remove({key:"ota_html"})}catch(x){}}}}}catch(e){}
+try{if(P&&!localStorage.getItem("mp2")){var r=await P.get({key:"mp2"});if(r&&r.value)localStorage.setItem("mp2",r.value)}}catch(e){}var s=document.createElement("script");s.text=document.getElementById("app-src").textContent;document.body.appendChild(s)})()</script></body></html>
