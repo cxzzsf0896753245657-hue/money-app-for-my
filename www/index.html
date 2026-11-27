@@ -250,7 +250,7 @@ nav button.t.pop svg{animation:ipop .42s var(--ease-spring)}@keyframes ipop{0%{t
 .toast{animation:tin .3s var(--ease-out) backwards}.toast.out{animation:tout .22s ease-in forwards}
 @keyframes tin{from{opacity:0;transform:translate(-50%,16px) scale(.94);filter:blur(4px)}}@keyframes tout{to{opacity:0;transform:translate(-50%,8px) scale(.96);filter:blur(3px)}}
 .card,.chip.on,.seg3 button{transition:background-color var(--dur-quick),color var(--dur-quick)}
-</style></head><body>
+</style><script>window.__errs=[];addEventListener("error",function(e){window.__errs.push(e.message)});setTimeout(function(){var m=document.getElementById("main");if(m&&!m.firstElementChild&&!m.textContent.trim()){var d=document.createElement("div");d.style.cssText="padding:24px;font:14px/1.6 sans-serif;color:#333";d.textContent="畫面沒有正常顯示。請關閉 App 重開；仍然空白請回報這段訊息："+(window.__errs.join(" | ")||"無");m.appendChild(d)}},3500)</script></head><body>
 <div id="main"></div>
 <nav id="nav"></nav>
 <div id="pkv" class="pkv" style="display:none"></div>
@@ -289,7 +289,7 @@ const rid=()=>Date.now()+Math.floor(Math.random()*1e6);
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 let D=null,S={tab:"book",led:"總資產",ym:today().slice(0,7),ct:"exp",sub:"cat",edit:null,f:{},fl:{},rot:0};
 try{D=JSON.parse(localStorage.getItem("mp2"))}catch(e){}
-const APP_VER="2026.11.26";
+const APP_VER="2026.11.27";
 // 線上更新（僅 App 版）：從 GitHub 讀最新的頁面，有變動就存起來，重新開啟後套用
 const OTA_URL="https://raw.githubusercontent.com/cxzzsf0896753245657-hue/money-app-for-my/main/www/index.html";
 const isApp=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
