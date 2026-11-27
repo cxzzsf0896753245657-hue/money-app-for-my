@@ -289,7 +289,7 @@ const rid=()=>Date.now()+Math.floor(Math.random()*1e6);
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 let D=null,S={tab:"book",led:"總資產",ym:today().slice(0,7),ct:"exp",sub:"cat",edit:null,f:{},fl:{},rot:0};
 try{D=JSON.parse(localStorage.getItem("mp2"))}catch(e){}
-const APP_VER="2026.11.27b";
+const APP_VER="2026.11.27c";
 // 線上更新（僅 App 版）：從 GitHub 讀最新的頁面，有變動就存起來，重新開啟後套用
 const OTA_URL="https://raw.githubusercontent.com/cxzzsf0896753245657-hue/money-app-for-my/main/www/index.html";
 const isApp=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
@@ -570,7 +570,7 @@ function runRec(){const t=today();D.rec.forEach(r=>{let n=0;const ac=D.accs.find
 const recG=r=>r.g||"i"+r.id,recGroup=r=>D.rec.filter(x=>recG(x)==recG(r));
 const dOf=r=>r.day||+r.next.slice(8);
 function recGRow(G){const r=G[0],cu=(D.accs.find(x=>x.id==(r.acc||r.to))||{}).cur,S2=[...G].sort((a,b)=>dOf(a)-dOf(b)),nx=G.map(x=>x.next).sort()[0];
- return`<button class="row" onclick="editRec(${r.id})">${tl("trending-up","#df8a72")}<div class="m"><div>${esc(recName(r))}</div><small>每月 ${S2.map(dOf).join("・")} 日・下次 ${nx}・${r.acc?esc(accN(r.acc)):"不扣款"}</small><small style="display:block">${S2.map(x=>dOf(x)+" 日 "+fmtC(x.amt,cu)).join("／")}</small></div><b>${fmtC(G.reduce((s,x)=>s+x.amt,0),cu)}<small style="display:block;font-weight:400;color:var(--sub);text-align:right">每月合計</small></b></button>`}
+ return`<button class="row" onclick="editRec(${r.id})">${tl("trending-up","#df8a72")}<div class="m"><div>${esc(recName(r))}</div><small>每月 ${S2.map(dOf).join("、")} 日・下次 ${nx}</small></div><b>${fmtC(G.reduce((s,x)=>s+x.amt,0),cu)}</b></button>`}
 const recName=r=>r.dca?"定期定額・"+holdName(r):r.note||(r.type=="trf"?"轉帳":fnd(r.type,r.cat).n);
 function pgRecs(){
  const add=`<button class="fadd" onclick="pgo('recnew')">${ic("plus",20)}新增</button>`;
